@@ -78,6 +78,7 @@
                 <label for="calendarYear">Year:</label>
                 <select id="calendarYear"></select>
                 <button id="printCalendarBtn" class="menu-btn" style="margin-left:16px;">Print Calendar</button>
+                <button id="addWorkDayBtn" class="menu-btn" style="margin-left:8px;">WORK DAY</button>
             </div>
             <div id="calendarPlaceholder">[Calendar will appear here]</div>
         </main>
@@ -210,5 +211,38 @@
     </div>
     
     <script src="script.js"></script>
+    <div id="workDayModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:400px;">
+        <span class="close" id="closeWorkDayModal">&times;</span>
+        <h3>Add Work Day</h3>
+        <form id="workDayForm">
+          <div class="form-row">
+            <label for="workDayDate">Date:</label>
+            <input type="date" id="workDayDate" name="workDayDate" required />
+          </div>
+          <div class="form-row">
+            <label for="workDayDay">Day of Week:</label>
+            <input type="text" id="workDayDay" name="workDayDay" readonly />
+          </div>
+          <div class="form-row">
+            <label for="workDayWorker">Who Should Work:</label>
+            <select id="workDayWorker" name="workDayWorker"></select>
+            <input type="text" id="newWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="workDayTime">Time:</label>
+            <input type="text" id="workDayTime" name="workDayTime" placeholder="e.g. 9am-5pm" />
+          </div>
+          <div class="form-row">
+            <label for="workDayNotes">Notes:</label>
+            <textarea id="workDayNotes" name="workDayNotes" rows="2"></textarea>
+          </div>
+          <div class="form-row" style="text-align:right;">
+            <button type="submit" class="menu-btn">Save Work Day</button>
+          </div>
+        </form>
+      </div>
+    </div>
 </body>
 </html> 

@@ -26,6 +26,10 @@ let filteredScheduleData = [];
 let calendarSelectedMonth = null;
 let calendarSelectedYear = null;
 
+// Work Day feature variables
+let workDayEntries = [];
+let workerList = ["Hayden", "Gavin", "Aiden", "Jayden", "Billy M", "David"];
+
 function updateTitles() {
     document.getElementById('dashboardTitle').textContent = currentMode.title;
     document.getElementById('calendarTitle').textContent = currentMode.calendarTitle;
@@ -183,7 +187,7 @@ function hideVenueSalesPopup() {
     if (popup) popup.style.display = 'none';
 }
 
-// Enhance renderCalendar to add hover events
+// Enhance renderCalendar to show work day entries
 function renderCalendar(trailerData) {
     const { month, year } = getCurrentMonthYear();
     const daysInMonth = getDaysInMonth(month, year);
@@ -210,19 +214,21 @@ function renderCalendar(trailerData) {
         cell.className = 'calendar-cell';
         cell.innerHTML = `<div class='calendar-date'>${day}</div>`;
         // Find events for this day
-        const dateStr = new Date(year, month, day).toLocaleDateString('en-CA');
+        const dateStr = new Date(year, month, day).toISOString().slice(0,10);
         const events = trailerData.filter(item => {
             if (!item.Date) return false;
-            // Accept both YYYY-MM-DD and MM/DD/YYYY
             const itemDate = new Date(item.Date);
             return !isNaN(itemDate) && itemDate.getFullYear() === year && itemDate.getMonth() === month && itemDate.getDate() === day;
+        });
+        const workDays = workDayEntries.filter(wd => {
+            const wdDate = new Date(wd.Date);
+            return !isNaN(wdDate) && wdDate.getFullYear() === year && wdDate.getMonth() === month && wdDate.getDate() === day;
         });
         if (events.length > 0) {
             events.forEach(ev => {
                 const evDiv = document.createElement('div');
                 evDiv.className = 'calendar-event';
                 evDiv.textContent = ev.Venue || '';
-                // Add hover events for popup
                 evDiv.addEventListener('mousemove', function(e) {
                     showVenueSalesPopup(ev.Venue || '', e.clientX, e.clientY);
                 });
@@ -230,6 +236,14 @@ function renderCalendar(trailerData) {
                     hideVenueSalesPopup();
                 });
                 cell.appendChild(evDiv);
+            });
+        }
+        if (workDays.length > 0) {
+            workDays.forEach(wd => {
+                const wdDiv = document.createElement('div');
+                wdDiv.className = 'calendar-workday';
+                wdDiv.innerHTML = `<b>WORK DAY</b><br>${wd.Worker}${wd.Time ? ' ('+wd.Time+')' : ''}${wd.Notes ? '<br>'+wd.Notes : ''}`;
+                cell.appendChild(wdDiv);
             });
         }
         row.appendChild(cell);
@@ -659,6 +673,44 @@ function renderCalendarWithPicker() {
     renderCalendar(data);
 }
 
+function openWorkDayModal(dateStr) {
+    document.getElementById('workDayModal').style.display = 'flex';
+    document.getElementById('workDayForm').reset();
+    document.getElementById('newWorkerInput').style.display = 'none';
+    populateWorkerDropdown();
+    if (dateStr) {
+        document.getElementById('workDayDate').value = dateStr;
+        updateWorkDayOfWeek();
+    }
+}
+function closeWorkDayModal() {
+    document.getElementById('workDayModal').style.display = 'none';
+}
+function populateWorkerDropdown() {
+    const select = document.getElementById('workDayWorker');
+    select.innerHTML = '';
+    workerList.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+    const addOpt = document.createElement('option');
+    addOpt.value = '__add_new__';
+    addOpt.textContent = 'Add new worker...';
+    select.appendChild(addOpt);
+}
+function updateWorkDayOfWeek() {
+    const dateStr = document.getElementById('workDayDate').value;
+    if (dateStr) {
+        const date = new Date(dateStr);
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        document.getElementById('workDayDay').value = days[date.getDay()];
+    } else {
+        document.getElementById('workDayDay').value = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const showCalendarBtn = document.getElementById('showCalendarBtn');
     const calendarView = document.getElementById('calendarView');
@@ -719,5 +771,47 @@ document.addEventListener('DOMContentLoaded', async function() {
     populateCalendarPickers();
     document.getElementById('printCalendarBtn').addEventListener('click', function() {
         window.print();
+    });
+
+    document.getElementById('addWorkDayBtn').addEventListener('click', function() {
+        openWorkDayModal();
+    });
+    document.getElementById('closeWorkDayModal').addEventListener('click', closeWorkDayModal);
+    document.getElementById('workDayDate').addEventListener('change', updateWorkDayOfWeek);
+    document.getElementById('workDayWorker').addEventListener('change', function(e) {
+        if (e.target.value === '__add_new__') {
+            document.getElementById('newWorkerInput').style.display = '';
+        } else {
+            document.getElementById('newWorkerInput').style.display = 'none';
+        }
+    });
+    document.getElementById('addWorkerBtn').addEventListener('click', function() {
+        const newName = document.getElementById('newWorkerInput').value.trim();
+        if (newName && !workerList.includes(newName)) {
+            workerList.push(newName);
+            populateWorkerDropdown();
+            document.getElementById('workDayWorker').value = newName;
+            document.getElementById('newWorkerInput').value = '';
+            document.getElementById('newWorkerInput').style.display = 'none';
+        }
+    });
+    document.getElementById('workDayForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const date = document.getElementById('workDayDate').value;
+        const day = document.getElementById('workDayDay').value;
+        let worker = document.getElementById('workDayWorker').value;
+        if (worker === '__add_new__') {
+            worker = document.getElementById('newWorkerInput').value.trim();
+            if (worker && !workerList.includes(worker)) {
+                workerList.push(worker);
+            }
+        }
+        const time = document.getElementById('workDayTime').value;
+        const notes = document.getElementById('workDayNotes').value;
+        if (date && worker) {
+            workDayEntries.push({ Date: date, Day: day, Worker: worker, Time: time, Notes: notes });
+            closeWorkDayModal();
+            renderCalendarWithPicker();
+        }
     });
 }); 
