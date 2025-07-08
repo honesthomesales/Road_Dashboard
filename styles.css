@@ -689,14 +689,14 @@ input:checked + .toggle-slider:before {
     margin: 0;
     box-shadow: none !important;
     background: #fff !important;
+    padding-bottom: 2.5in;
   }
   #calendarTitle {
     color: #000 !important;
     margin-bottom: 8px;
   }
-  .calendar-table {
-    border: 1px solid #000 !important;
-    border-collapse: collapse !important;
+  .calendar-table, .calendar-table th, .calendar-table td {
+    border: none !important;
     background: #fff !important;
     color: #000 !important;
     box-shadow: none !important;

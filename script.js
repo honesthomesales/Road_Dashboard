@@ -285,7 +285,8 @@ function renderCalendar(trailerData) {
             events.forEach(ev => {
                 const evDiv = document.createElement('div');
                 evDiv.className = 'calendar-event';
-                evDiv.textContent = ev.Venue || '';
+                let workerText = ev.Workers ? `<div class='calendar-workers'>${Array.isArray(ev.Workers) ? ev.Workers.join(', ') : ev.Workers}</div>` : '';
+                evDiv.innerHTML = `${ev.Venue || ''}${workerText}`;
                 evDiv.addEventListener('mousemove', function(e) {
                     showVenueSalesPopup(ev.Venue || '', e.clientX, e.clientY);
                 });
@@ -969,6 +970,55 @@ function setupCalendarDoubleClick() {
   });
 }
 
+function enableInlineEditing() {
+  const tbody = document.getElementById('scheduleBody');
+  tbody.addEventListener('dblclick', async function(e) {
+    const cell = e.target.closest('td');
+    if (!cell) return;
+    const row = cell.parentElement;
+    const colIdx = Array.from(row.children).indexOf(cell);
+    // Only allow editing for Status (3), Gross Sales (5), Net Sales (6)
+    if (![3, 5, 6].includes(colIdx)) return;
+    const originalValue = cell.textContent;
+    const input = document.createElement('input');
+    input.type = (colIdx === 3) ? 'text' : 'number';
+    input.value = originalValue.replace(/[$,]/g, '');
+    input.style.width = '90%';
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    input.focus();
+    input.select();
+    input.addEventListener('blur', saveEdit);
+    input.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter') {
+        saveEdit();
+      } else if (ev.key === 'Escape') {
+        cell.textContent = originalValue;
+      }
+    });
+    async function saveEdit() {
+      const newValue = input.value;
+      if (newValue === originalValue) {
+        cell.textContent = originalValue;
+        return;
+      }
+      // Find the data row
+      const rowIdx = row.rowIndex - 1 + (currentPage - 1) * ROWS_PER_PAGE;
+      const item = filteredScheduleData[rowIdx];
+      if (!item) return;
+      // Determine sheet
+      const sheet = currentMode === MODES.CAMPER ? 'Camper_History' : 'Trailer_History';
+      let updateCol;
+      if (colIdx === 3) updateCol = 'Status';
+      if (colIdx === 5) updateCol = 'Gross Sales';
+      if (colIdx === 6) updateCol = 'Net Sales';
+      // Use Date + Venue as key
+      await updateSaleField(sheet, ['Date', 'Venue'], [item.Date, item.Venue], updateCol, newValue);
+      await reloadSalesTable(sheet);
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const showCalendarBtn = document.getElementById('showCalendarBtn');
     const calendarView = document.getElementById('calendarView');
@@ -1151,4 +1201,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         renderTablePage(currentPage);
     });
     setupCalendarDoubleClick();
+    enableInlineEditing();
 }); 
