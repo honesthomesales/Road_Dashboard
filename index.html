@@ -45,6 +45,7 @@
         <!-- Daily Sales View -->
         <main id="dailySalesView">
             <div class="schedule-container" id="tableView">
+                <button id="addSaleBtn" class="menu-btn" style="margin-bottom:12px;">Add Sale</button>
                 <table class="schedule-table">
                     <thead>
                         <tr>
@@ -174,6 +175,10 @@
                             <label>Promo To Send:</label>
                             <span id="modalPromoSend"></span>
                         </div>
+                        <div class="detail-row">
+                            <label>Workers:</label>
+                            <span id="modalWorkers"></span>
+                        </div>
                     </div>
                     <div class="detail-section">
                         <h3>Location & Contact</h3>
@@ -214,19 +219,15 @@
     <div id="workDayModal" class="modal" style="display:none;">
       <div class="modal-content" style="max-width:400px;">
         <span class="close" id="closeWorkDayModal">&times;</span>
-        <h3>Add Work Day</h3>
+        <h3 id="workDayModalTitle">Add Work Day</h3>
         <form id="workDayForm">
           <div class="form-row">
             <label for="workDayDate">Date:</label>
             <input type="date" id="workDayDate" name="workDayDate" required />
           </div>
           <div class="form-row">
-            <label for="workDayDay">Day of Week:</label>
-            <input type="text" id="workDayDay" name="workDayDay" readonly />
-          </div>
-          <div class="form-row">
             <label for="workDayWorker">Who Should Work:</label>
-            <select id="workDayWorker" name="workDayWorker"></select>
+            <select id="workDayWorker" name="workDayWorker" multiple size="4"></select>
             <input type="text" id="newWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
             <button type="button" id="addWorkerBtn" style="margin-top:4px;">Add Worker</button>
           </div>
@@ -238,8 +239,59 @@
             <label for="workDayNotes">Notes:</label>
             <textarea id="workDayNotes" name="workDayNotes" rows="2"></textarea>
           </div>
+          <input type="hidden" id="workDayEditIndex" value="" />
           <div class="form-row" style="text-align:right;">
             <button type="submit" class="menu-btn">Save Work Day</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="saleModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:400px;">
+        <span class="close" id="closeSaleModal">&times;</span>
+        <h3 id="saleModalTitle">Add Sale</h3>
+        <form id="saleForm">
+          <div class="form-row">
+            <label for="saleDate">Date:</label>
+            <input type="date" id="saleDate" name="saleDate" required />
+          </div>
+          <div class="form-row">
+            <label for="saleDay">Day of Week:</label>
+            <input type="text" id="saleDay" name="saleDay" readonly />
+          </div>
+          <div class="form-row">
+            <label for="saleVenue">Venue:</label>
+            <input type="text" id="saleVenue" name="saleVenue" />
+          </div>
+          <div class="form-row">
+            <label for="saleStatus">Status:</label>
+            <input type="text" id="saleStatus" name="saleStatus" />
+          </div>
+          <div class="form-row">
+            <label for="saleForecast">Forecast:</label>
+            <input type="number" id="saleForecast" name="saleForecast" />
+          </div>
+          <div class="form-row">
+            <label for="saleGross">Gross Sales:</label>
+            <input type="number" id="saleGross" name="saleGross" />
+          </div>
+          <div class="form-row">
+            <label for="saleNet">Net Sales:</label>
+            <input type="number" id="saleNet" name="saleNet" />
+          </div>
+          <div class="form-row">
+            <label for="saleWorkers">Workers:</label>
+            <select id="saleWorkers" name="saleWorkers" multiple size="4"></select>
+            <input type="text" id="newSaleWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addSaleWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="saleNotes">Notes:</label>
+            <textarea id="saleNotes" name="saleNotes" rows="2"></textarea>
+          </div>
+          <input type="hidden" id="saleEditIndex" value="" />
+          <div class="form-row" style="text-align:right;">
+            <button type="submit" class="menu-btn">Save Sale</button>
           </div>
         </form>
       </div>

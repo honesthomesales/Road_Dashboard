@@ -30,6 +30,9 @@ let calendarSelectedYear = null;
 let workDayEntries = [];
 let workerList = ["Hayden", "Gavin", "Aiden", "Jayden", "Billy M", "David"];
 
+// Daily Sales feature variables
+let customSalesEntries = [];
+
 function updateTitles() {
     document.getElementById('dashboardTitle').textContent = currentMode.title;
     document.getElementById('calendarTitle').textContent = currentMode.calendarTitle;
@@ -220,7 +223,7 @@ function renderCalendar(trailerData) {
             const itemDate = new Date(item.Date);
             return !isNaN(itemDate) && itemDate.getFullYear() === year && itemDate.getMonth() === month && itemDate.getDate() === day;
         });
-        const workDays = workDayEntries.filter(wd => {
+        const workDays = workDayEntries.map((wd, idx) => ({...wd, _idx: idx})).filter(wd => {
             const wdDate = new Date(wd.Date);
             return !isNaN(wdDate) && wdDate.getFullYear() === year && wdDate.getMonth() === month && wdDate.getDate() === day;
         });
@@ -242,7 +245,10 @@ function renderCalendar(trailerData) {
             workDays.forEach(wd => {
                 const wdDiv = document.createElement('div');
                 wdDiv.className = 'calendar-workday';
-                wdDiv.innerHTML = `<b>WORK DAY</b><br>${wd.Worker}${wd.Time ? ' ('+wd.Time+')' : ''}${wd.Notes ? '<br>'+wd.Notes : ''}`;
+                wdDiv.innerHTML = `<div class='workday-actions'>
+                  <button class='workday-action-btn' title='Edit' onclick='openWorkDayModal("${wd.Date}",${wd._idx})'>&#9998;</button>
+                  <button class='workday-action-btn' title='Delete' onclick='deleteWorkDay(${wd._idx})'>&#128465;</button>
+                </div><b>WORK DAY</b><br>${wd.Workers ? wd.Workers.join(', ') : ''}${wd.Time ? ' ('+wd.Time+')' : ''}${wd.Notes ? '<br>'+wd.Notes : ''}`;
                 cell.appendChild(wdDiv);
             });
         }
@@ -270,6 +276,7 @@ function showDetails(index) {
     document.getElementById('modalEmail').textContent = item.Email || '';
     document.getElementById('modalTimes').textContent = item.Times || '';
     document.getElementById('modalShowInfo').textContent = item['Show Info'] || '';
+    document.getElementById('modalWorkers').textContent = item.Workers ? item.Workers.join(', ') : '';
     document.getElementById('detailModal').style.display = 'block';
 }
 
@@ -673,14 +680,25 @@ function renderCalendarWithPicker() {
     renderCalendar(data);
 }
 
-function openWorkDayModal(dateStr) {
+function openWorkDayModal(dateStr, editIndex = null) {
     document.getElementById('workDayModal').style.display = 'flex';
     document.getElementById('workDayForm').reset();
     document.getElementById('newWorkerInput').style.display = 'none';
+    document.getElementById('workDayEditIndex').value = editIndex !== null ? editIndex : '';
     populateWorkerDropdown();
-    if (dateStr) {
+    document.getElementById('workDayModalTitle').textContent = editIndex !== null ? 'Edit Work Day' : 'Add Work Day';
+    if (editIndex !== null) {
+        const wd = workDayEntries[editIndex];
+        document.getElementById('workDayDate').value = wd.Date;
+        document.getElementById('workDayTime').value = wd.Time;
+        document.getElementById('workDayNotes').value = wd.Notes;
+        // Set selected workers
+        const select = document.getElementById('workDayWorker');
+        Array.from(select.options).forEach(opt => {
+            opt.selected = wd.Workers && wd.Workers.includes(opt.value);
+        });
+    } else if (dateStr) {
         document.getElementById('workDayDate').value = dateStr;
-        updateWorkDayOfWeek();
     }
 }
 function closeWorkDayModal() {
@@ -708,6 +726,64 @@ function updateWorkDayOfWeek() {
         document.getElementById('workDayDay').value = days[date.getDay()];
     } else {
         document.getElementById('workDayDay').value = '';
+    }
+}
+
+function openSaleModal(editIndex = null) {
+    document.getElementById('saleModal').style.display = 'flex';
+    document.getElementById('saleForm').reset();
+    document.getElementById('newSaleWorkerInput').style.display = 'none';
+    document.getElementById('saleEditIndex').value = editIndex !== null ? editIndex : '';
+    populateSaleWorkerDropdown();
+    document.getElementById('saleModalTitle').textContent = editIndex !== null ? 'Edit Sale' : 'Add Sale';
+    if (editIndex !== null) {
+        const sale = customSalesEntries[editIndex];
+        document.getElementById('saleDate').value = sale.Date;
+        document.getElementById('saleDay').value = sale.Day;
+        document.getElementById('saleVenue').value = sale.Venue;
+        document.getElementById('saleStatus').value = sale.Status;
+        document.getElementById('saleForecast').value = sale.Forecast;
+        document.getElementById('saleGross').value = sale['Gross Sales'];
+        document.getElementById('saleNet').value = sale['Net Sales'];
+        document.getElementById('saleNotes').value = sale.Notes;
+        // Set selected workers
+        const select = document.getElementById('saleWorkers');
+        Array.from(select.options).forEach(opt => {
+            opt.selected = sale.Workers && sale.Workers.includes(opt.value);
+        });
+    }
+}
+function closeSaleModal() {
+    document.getElementById('saleModal').style.display = 'none';
+}
+function populateSaleWorkerDropdown() {
+    const select = document.getElementById('saleWorkers');
+    select.innerHTML = '';
+    workerList.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        select.appendChild(opt);
+    });
+    const addOpt = document.createElement('option');
+    addOpt.value = '__add_new__';
+    addOpt.textContent = 'Add new worker...';
+    select.appendChild(addOpt);
+}
+function updateSaleDayOfWeek() {
+    const dateStr = document.getElementById('saleDate').value;
+    if (dateStr) {
+        const date = new Date(dateStr);
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        document.getElementById('saleDay').value = days[date.getDay()];
+    } else {
+        document.getElementById('saleDay').value = '';
+    }
+}
+function deleteSale(index) {
+    if (confirm('Delete this sale entry?')) {
+        customSalesEntries.splice(index, 1);
+        renderTablePage(currentPage);
     }
 }
 
@@ -779,7 +855,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('closeWorkDayModal').addEventListener('click', closeWorkDayModal);
     document.getElementById('workDayDate').addEventListener('change', updateWorkDayOfWeek);
     document.getElementById('workDayWorker').addEventListener('change', function(e) {
-        if (e.target.value === '__add_new__') {
+        const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+        if (selected.includes('__add_new__')) {
             document.getElementById('newWorkerInput').style.display = '';
         } else {
             document.getElementById('newWorkerInput').style.display = 'none';
@@ -790,7 +867,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (newName && !workerList.includes(newName)) {
             workerList.push(newName);
             populateWorkerDropdown();
-            document.getElementById('workDayWorker').value = newName;
+            // Select the new worker
+            const select = document.getElementById('workDayWorker');
+            Array.from(select.options).forEach(opt => {
+                opt.selected = opt.value === newName;
+            });
             document.getElementById('newWorkerInput').value = '';
             document.getElementById('newWorkerInput').style.display = 'none';
         }
@@ -798,20 +879,93 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('workDayForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const date = document.getElementById('workDayDate').value;
-        const day = document.getElementById('workDayDay').value;
-        let worker = document.getElementById('workDayWorker').value;
-        if (worker === '__add_new__') {
-            worker = document.getElementById('newWorkerInput').value.trim();
-            if (worker && !workerList.includes(worker)) {
-                workerList.push(worker);
+        let workers = Array.from(document.getElementById('workDayWorker').selectedOptions).map(opt => opt.value).filter(v => v !== '__add_new__');
+        // Add new worker if needed
+        if (workers.includes('__add_new__')) {
+            const newWorker = document.getElementById('newWorkerInput').value.trim();
+            if (newWorker && !workerList.includes(newWorker)) {
+                workerList.push(newWorker);
+                workers = workers.filter(w => w !== '__add_new__').concat(newWorker);
             }
         }
         const time = document.getElementById('workDayTime').value;
         const notes = document.getElementById('workDayNotes').value;
-        if (date && worker) {
-            workDayEntries.push({ Date: date, Day: day, Worker: worker, Time: time, Notes: notes });
+        const editIndex = document.getElementById('workDayEditIndex').value;
+        if (date && workers.length > 0) {
+            if (editIndex !== '') {
+                workDayEntries[editIndex] = { Date: date, Workers: workers, Time: time, Notes: notes };
+            } else {
+                workDayEntries.push({ Date: date, Workers: workers, Time: time, Notes: notes });
+            }
             closeWorkDayModal();
             renderCalendarWithPicker();
         }
+    });
+
+    document.getElementById('addSaleBtn').addEventListener('click', function() {
+        openSaleModal();
+    });
+    document.getElementById('closeSaleModal').addEventListener('click', closeSaleModal);
+    document.getElementById('saleDate').addEventListener('change', updateSaleDayOfWeek);
+    document.getElementById('saleWorkers').addEventListener('change', function(e) {
+        const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
+        if (selected.includes('__add_new__')) {
+            document.getElementById('newSaleWorkerInput').style.display = '';
+        } else {
+            document.getElementById('newSaleWorkerInput').style.display = 'none';
+        }
+    });
+    document.getElementById('addSaleWorkerBtn').addEventListener('click', function() {
+        const newName = document.getElementById('newSaleWorkerInput').value.trim();
+        if (newName && !workerList.includes(newName)) {
+            workerList.push(newName);
+            populateSaleWorkerDropdown();
+            // Select the new worker
+            const select = document.getElementById('saleWorkers');
+            Array.from(select.options).forEach(opt => {
+                opt.selected = opt.value === newName;
+            });
+            document.getElementById('newSaleWorkerInput').value = '';
+            document.getElementById('newSaleWorkerInput').style.display = 'none';
+        }
+    });
+    document.getElementById('saleForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const date = document.getElementById('saleDate').value;
+        const day = document.getElementById('saleDay').value;
+        const venue = document.getElementById('saleVenue').value;
+        const status = document.getElementById('saleStatus').value;
+        const forecast = document.getElementById('saleForecast').value;
+        const gross = document.getElementById('saleGross').value;
+        const net = document.getElementById('saleNet').value;
+        const notes = document.getElementById('saleNotes').value;
+        let workers = Array.from(document.getElementById('saleWorkers').selectedOptions).map(opt => opt.value).filter(v => v !== '__add_new__');
+        // Add new worker if needed
+        if (workers.includes('__add_new__')) {
+            const newWorker = document.getElementById('newSaleWorkerInput').value.trim();
+            if (newWorker && !workerList.includes(newWorker)) {
+                workerList.push(newWorker);
+                workers = workers.filter(w => w !== '__add_new__').concat(newWorker);
+            }
+        }
+        const editIndex = document.getElementById('saleEditIndex').value;
+        const saleObj = {
+            Date: date,
+            Day: day,
+            Venue: venue,
+            Status: status,
+            Forecast: forecast,
+            'Gross Sales': gross,
+            'Net Sales': net,
+            Notes: notes,
+            Workers: workers
+        };
+        if (editIndex !== '') {
+            customSalesEntries[editIndex] = saleObj;
+        } else {
+            customSalesEntries.push(saleObj);
+        }
+        closeSaleModal();
+        renderTablePage(currentPage);
     });
 }); 

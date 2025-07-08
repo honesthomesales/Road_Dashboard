@@ -695,33 +695,32 @@ input:checked + .toggle-slider:before {
     margin-bottom: 8px;
   }
   .calendar-table {
+    border: 1px solid #000 !important;
+    border-collapse: collapse !important;
     background: #fff !important;
     color: #000 !important;
     box-shadow: none !important;
-    border: 1px solid #000 !important;
   }
   .calendar-table th, .calendar-table td {
+    border: 1px solid #000 !important;
     background: #fff !important;
     color: #000 !important;
-    border: 1px solid #000 !important;
     font-size: 12pt !important;
     padding: 4px 2px !important;
   }
-  .calendar-date, .calendar-event {
+  .calendar-date, .calendar-event, .calendar-workday {
     color: #000 !important;
     background: none !important;
-    font-weight: bold;
     border-radius: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
   }
-  .calendar-event {
+  .calendar-workday {
+    border: none !important;
+    background: none !important;
+    color: #000 !important;
     font-size: 11pt !important;
     font-weight: normal;
-    border: none !important;
-  }
-  .calendar-cell {
-    background: none !important;
   }
   #calendarPlaceholder {
     color: #000 !important;
@@ -793,4 +792,38 @@ input:checked + .toggle-slider:before {
 }
 @media print {
   #workDayModal { display: none !important; }
+} 
+
+/* Work Day Edit/Delete Icon Styles */
+.calendar-workday {
+  position: relative;
+  background: #f3f3f3;
+  border: 1px dashed #764ba2;
+  border-radius: 6px;
+  margin: 2px 0;
+  padding: 4px 6px 4px 24px;
+  font-size: 0.95rem;
+  color: #222;
+}
+.calendar-workday .workday-actions {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.calendar-workday .workday-action-btn {
+  background: none;
+  border: none;
+  color: #764ba2;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+#workDayWorker[multiple] {
+  min-height: 70px;
+  font-size: 1rem;
 } 
