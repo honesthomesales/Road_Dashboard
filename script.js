@@ -50,6 +50,60 @@ async function fetchScheduleData() {
     return await response.json();
 }
 
+async function fetchSalesData(sheet) {
+  return await apiGet(sheet);
+}
+
+async function addSale(sheet, saleRow) {
+  await apiAdd(sheet, saleRow);
+  await reloadSalesTable(sheet);
+}
+
+async function updateSaleField(sheet, keyColumns, keyValues, updateColumn, updateValue) {
+  await apiUpdateField(sheet, keyColumns, keyValues, updateColumn, updateValue);
+  await reloadSalesTable(sheet);
+}
+
+async function updateSaleFields(sheet, keyColumns, keyValues, updates) {
+  await apiUpdateFields(sheet, keyColumns, keyValues, updates);
+  await reloadSalesTable(sheet);
+}
+
+async function deleteSale(sheet, keyColumns, keyValues) {
+  await apiDelete(sheet, keyColumns, keyValues);
+  await reloadSalesTable(sheet);
+}
+
+async function reloadSalesTable(sheet) {
+  const data = await fetchSalesData(sheet);
+  filteredScheduleData = filterScheduleData(data);
+  renderTablePage(currentPage);
+}
+
+async function fetchWorkDays() {
+  return await apiGet('WorkDays');
+}
+
+async function addWorkDay(workDayRow) {
+  await apiAdd('WorkDays', workDayRow);
+  await reloadWorkDays();
+}
+
+async function updateWorkDayField(keyColumns, keyValues, updateColumn, updateValue) {
+  await apiUpdateField('WorkDays', keyColumns, keyValues, updateColumn, updateValue);
+  await reloadWorkDays();
+}
+
+async function deleteWorkDayApi(keyColumns, keyValues) {
+  await apiDelete('WorkDays', keyColumns, keyValues);
+  await reloadWorkDays();
+}
+
+async function reloadWorkDays() {
+  workDayEntries = await fetchWorkDays();
+  renderCalendarWithPicker();
+}
+
 function parseSheetDate(dateString) {
     if (!dateString) return null;
     // Handle 'YYYY-MM-DD 0:00:00' format
@@ -247,7 +301,7 @@ function renderCalendar(trailerData) {
                 wdDiv.className = 'calendar-workday';
                 wdDiv.innerHTML = `<div class='workday-actions'>
                   <button class='workday-action-btn' title='Edit' onclick='openWorkDayModal("${wd.Date}",${wd._idx})'>&#9998;</button>
-                  <button class='workday-action-btn' title='Delete' onclick='deleteWorkDay(${wd._idx})'>&#128465;</button>
+                  <button class='workday-action-btn' title='Delete' onclick='deleteWorkDayApi(${wd._idx})'>&#128465;</button>
                 </div><b>WORK DAY</b><br>${wd.Workers ? wd.Workers.join(', ') : ''}${wd.Time ? ' ('+wd.Time+')' : ''}${wd.Notes ? '<br>'+wd.Notes : ''}`;
                 cell.appendChild(wdDiv);
             });
@@ -787,6 +841,134 @@ function deleteSale(index) {
     }
 }
 
+// --- Google Sheets API Integration Helpers ---
+const SHEETS_API_BASE = 'https://script.google.com/macros/s/AKfycbwcZXKt-ylcIf4-aU08DbDj58E-NisAHtNf9ID5CelpelWFcm0KECs-oTq6dI8rNFMX/exec';
+
+async function apiGet(sheet) {
+  const res = await fetch(`${SHEETS_API_BASE}?sheet=${sheet}`);
+  if (!res.ok) throw new Error('Failed to fetch data');
+  return await res.json();
+}
+
+async function apiAdd(sheet, row) {
+  const res = await fetch(`${SHEETS_API_BASE}?sheet=${sheet}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'add', row })
+  });
+  return await res.json();
+}
+
+async function apiUpdateField(sheet, keyColumns, keyValues, updateColumn, updateValue) {
+  const res = await fetch(`${SHEETS_API_BASE}?sheet=${sheet}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'updateField',
+      keyColumns,
+      keyValues,
+      updateColumn,
+      updateValue
+    })
+  });
+  return await res.json();
+}
+
+async function apiUpdateFields(sheet, keyColumns, keyValues, updates) {
+  const res = await fetch(`${SHEETS_API_BASE}?sheet=${sheet}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'updateFields',
+      keyColumns,
+      keyValues,
+      updates
+    })
+  });
+  return await res.json();
+}
+
+async function apiDelete(sheet, keyColumns, keyValues) {
+  const res = await fetch(`${SHEETS_API_BASE}?sheet=${sheet}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'delete',
+      keyColumns,
+      keyValues
+    })
+  });
+  return await res.json();
+}
+
+async function populateVenueDropdown(selectId) {
+  const select = document.getElementById(selectId);
+  select.innerHTML = '';
+  try {
+    const venues = await apiGet('Venues');
+    venues.forEach(v => {
+      if (v.Venue) {
+        const opt = document.createElement('option');
+        opt.value = v.Venue;
+        opt.textContent = v.Venue;
+        select.appendChild(opt);
+      }
+    });
+  } catch (err) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Error loading venues';
+    select.appendChild(opt);
+  }
+}
+
+async function addVenue(newVenue) {
+  await apiAdd('Venues', [newVenue]);
+  await updateAllVenueDropdowns();
+}
+
+async function editVenue(oldVenue, newVenue) {
+  await apiUpdateField('Venues', ['Venue'], [oldVenue], 'Venue', newVenue);
+  await updateAllVenueDropdowns();
+}
+
+async function deleteVenue(venue) {
+  await apiDelete('Venues', ['Venue'], [venue]);
+  await updateAllVenueDropdowns();
+}
+
+async function updateAllVenueDropdowns() {
+  // Add all select IDs that use venues here
+  await populateVenueDropdown('saleVenue');
+  // Add more as needed
+}
+
+async function reloadAllData() {
+  // Reload venues and update dropdowns
+  await updateAllVenueDropdowns();
+  // Reload sales for current mode
+  const sheet = currentMode === MODES.CAMPER ? 'Camper_History' : 'Trailer_History';
+  await reloadSalesTable(sheet);
+  // Reload work days
+  await reloadWorkDays();
+}
+
+// Double-click in calendar to add worker
+function setupCalendarDoubleClick() {
+  document.getElementById('calendarPlaceholder').addEventListener('dblclick', function(e) {
+    // Find the cell
+    let cell = e.target.closest('.calendar-cell');
+    if (!cell) return;
+    // Get the date from the cell
+    let dateDiv = cell.querySelector('.calendar-date');
+    if (!dateDiv) return;
+    let day = dateDiv.textContent;
+    const { month, year } = getCurrentMonthYear();
+    let dateStr = new Date(year, month, parseInt(day, 10)).toISOString().slice(0,10);
+    openWorkDayModal(dateStr);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     const showCalendarBtn = document.getElementById('showCalendarBtn');
     const calendarView = document.getElementById('calendarView');
@@ -968,4 +1150,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         closeSaleModal();
         renderTablePage(currentPage);
     });
+    setupCalendarDoubleClick();
 }); 
