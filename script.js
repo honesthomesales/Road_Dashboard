@@ -717,4 +717,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     populateCalendarPickers();
+    document.getElementById('printCalendarBtn').addEventListener('click', function() {
+        window.print();
+    });
 }); 

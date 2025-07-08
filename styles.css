@@ -35,7 +35,18 @@ header p {
 }
 
 .site-logo {
-    margin-bottom: 12px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 340px;
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 600px) {
+    .site-logo {
+        max-width: 180px;
+    }
 }
 
 .schedule-container {
@@ -662,4 +673,62 @@ input:checked + .toggle-slider:before {
         flex-direction: column;
         gap: 4px;
     }
+} 
+
+/* Print styles for calendar view */
+@media print {
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .site-logo-container, .universal-toggle, .top-menu, .pagination-controls, .menu-btn, #dailySalesView, #dashboardView, #averageSaleView, .loading-spinner, .nav-buttons, .detail-btn, .close, .calendar-controls label, .calendar-controls select, .calendar-controls option {
+    display: none !important;
+  }
+  #calendarView {
+    display: block !important;
+    margin: 0;
+    box-shadow: none !important;
+    background: #fff !important;
+  }
+  #calendarTitle {
+    color: #000 !important;
+    margin-bottom: 8px;
+  }
+  .calendar-table {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+  .calendar-table th, .calendar-table td {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    font-size: 12pt !important;
+    padding: 4px 2px !important;
+  }
+  .calendar-date, .calendar-event {
+    color: #000 !important;
+    background: none !important;
+    font-weight: bold;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .calendar-event {
+    font-size: 11pt !important;
+    font-weight: normal;
+    border: none !important;
+  }
+  .calendar-cell {
+    background: none !important;
+  }
+  #calendarPlaceholder {
+    color: #000 !important;
+    font-size: 1rem !important;
+    margin-top: 0 !important;
+  }
+  header, footer, .container > *:not(#calendarView) {
+    display: none !important;
+  }
 } 
