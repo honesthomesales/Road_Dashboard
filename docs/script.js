@@ -200,31 +200,42 @@ function openUpdateSaleModal(index) {
   document.getElementById('updateSaleModal').style.display = 'block';
 }
 
-document.getElementById('updateSaleForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const index = document.getElementById('updateSaleIndex').value;
-  const updatedSale = {
-    Date: document.getElementById('updateSaleDate').value,
-    Venue: document.getElementById('updateSaleVenue').value,
-    Workers: Array.from(document.getElementById('updateSaleWorkers').selectedOptions).map(opt => opt.value),
-    Status: document.getElementById('updateSaleStatus').value,
-    Forecast: document.getElementById('updateSaleForecast').value,
-    'Gross Sales': document.getElementById('updateSaleGross').value,
-    'Net Sales': document.getElementById('updateSaleNet').value,
-    Notes: document.getElementById('updateSaleNotes').value,
-    Promo: document.getElementById('updateSalePromo').value,
-    'Promo To Send': document.getElementById('updateSalePromoSend').value,
-    'Address / City': document.getElementById('updateSaleAddress').value,
-    Contact: document.getElementById('updateSaleContact').value,
-    Phone: document.getElementById('updateSalePhone').value,
-    Email: document.getElementById('updateSaleEmail').value,
-    Times: document.getElementById('updateSaleTimes').value,
-    'Show Info': document.getElementById('updateSaleShowInfo').value
-  };
-  await updateSaleApi(index, updatedSale);
-  document.getElementById('updateSaleModal').style.display = 'none';
-  await refreshScheduleData();
-};
+document.addEventListener('DOMContentLoaded', function() {
+  var updateSaleForm = document.getElementById('updateSaleForm');
+  if (updateSaleForm) {
+    updateSaleForm.onsubmit = async function(e) {
+      e.preventDefault();
+      const index = document.getElementById('updateSaleIndex').value;
+      const updatedSale = {
+        Date: document.getElementById('updateSaleDate').value,
+        Venue: document.getElementById('updateSaleVenue').value,
+        Workers: Array.from(document.getElementById('updateSaleWorkers').selectedOptions).map(opt => opt.value),
+        Status: document.getElementById('updateSaleStatus') ? document.getElementById('updateSaleStatus').value : '',
+        Forecast: document.getElementById('updateSaleForecast') ? document.getElementById('updateSaleForecast').value : '',
+        'Gross Sales': document.getElementById('updateSaleGross') ? document.getElementById('updateSaleGross').value : '',
+        'Net Sales': document.getElementById('updateSaleNet') ? document.getElementById('updateSaleNet').value : '',
+        Notes: document.getElementById('updateSaleNotes').value,
+        Promo: document.getElementById('updateSalePromo') ? document.getElementById('updateSalePromo').value : '',
+        'Promo To Send': document.getElementById('updateSalePromoSend') ? document.getElementById('updateSalePromoSend').value : '',
+        'Address / City': document.getElementById('updateSaleAddress') ? document.getElementById('updateSaleAddress').value : '',
+        Contact: document.getElementById('updateSaleContact') ? document.getElementById('updateSaleContact').value : '',
+        Phone: document.getElementById('updateSalePhone') ? document.getElementById('updateSalePhone').value : '',
+        Email: document.getElementById('updateSaleEmail') ? document.getElementById('updateSaleEmail').value : '',
+        Times: document.getElementById('updateSaleTimes') ? document.getElementById('updateSaleTimes').value : '',
+        'Show Info': document.getElementById('updateSaleShowInfo') ? document.getElementById('updateSaleShowInfo').value : ''
+      };
+      await updateSaleApi(index, updatedSale);
+      document.getElementById('updateSaleModal').style.display = 'none';
+      await refreshScheduleData();
+    };
+  }
+  var exitUpdateSaleModalBtn = document.getElementById('exitUpdateSaleModalBtn');
+  if (exitUpdateSaleModalBtn) {
+    exitUpdateSaleModalBtn.onclick = function() {
+      document.getElementById('updateSaleModal').style.display = 'none';
+    };
+  }
+});
 
 document.getElementById('exitUpdateSaleModalBtn').onclick = function() {
   document.getElementById('updateSaleModal').style.display = 'none';
