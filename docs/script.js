@@ -113,10 +113,10 @@ function parseSheetDate(dateString) {
 }
 
 function getDateRange() {
-    const startDate = new Date('2025-06-01');
-    const endDate = new Date('2025-07-12');
-    startDate.setHours(0,0,0,0);
-    endDate.setHours(23,59,59,999);
+    // Dynamic: current month
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     return { startDate, endDate };
 }
 

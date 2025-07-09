@@ -113,10 +113,10 @@ function parseSheetDate(dateString) {
 }
 
 function getDateRange() {
-    const startDate = new Date('2025-06-01');
-    const endDate = new Date('2025-07-12');
-    startDate.setHours(0,0,0,0);
-    endDate.setHours(23,59,59,999);
+    // Dynamic: current month
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     return { startDate, endDate };
 }
 
@@ -178,18 +178,56 @@ function renderTablePage(page) {
     enableStatusToggle();
 }
 
-window.openUpdateSaleModal = function(index) {
-  const item = filteredScheduleData[index];
-  if (!item) return;
-  document.getElementById('updateSaleModal').style.display = 'flex';
-  document.getElementById('updateSaleForm').reset();
+function openUpdateSaleModal(index) {
+  const sale = filteredScheduleData[index];
   document.getElementById('updateSaleIndex').value = index;
-  document.getElementById('updateSaleDate').value = item.Date ? item.Date.split(' ')[0] : '';
-  populateVenueDropdown('updateSaleVenue').then(() => {
-    document.getElementById('updateSaleVenue').value = item.Venue || '';
-  });
-  populateUpdateSaleWorkerDropdown(item.Workers);
-  document.getElementById('updateSaleNotes').value = item.Notes || '';
+  document.getElementById('updateSaleDate').value = sale.Date || '';
+  populateVenueDropdown('updateSaleVenue', sale.Venue);
+  populateWorkerDropdown('updateSaleWorkers', sale.Workers);
+  document.getElementById('updateSaleStatus').value = sale.Status || 'Confirmed';
+  document.getElementById('updateSaleForecast').value = sale.Forecast || '';
+  document.getElementById('updateSaleGross').value = sale['Gross Sales'] || '';
+  document.getElementById('updateSaleNet').value = sale['Net Sales'] || '';
+  document.getElementById('updateSaleNotes').value = sale.Notes || '';
+  document.getElementById('updateSalePromo').value = sale.Promo || '';
+  document.getElementById('updateSalePromoSend').value = sale['Promo To Send'] || '';
+  document.getElementById('updateSaleAddress').value = sale['Address / City'] || '';
+  document.getElementById('updateSaleContact').value = sale.Contact || '';
+  document.getElementById('updateSalePhone').value = sale.Phone || '';
+  document.getElementById('updateSaleEmail').value = sale.Email || '';
+  document.getElementById('updateSaleTimes').value = sale.Times || '';
+  document.getElementById('updateSaleShowInfo').value = sale['Show Info'] || '';
+  document.getElementById('updateSaleModal').style.display = 'block';
+}
+
+document.getElementById('updateSaleForm').onsubmit = async function(e) {
+  e.preventDefault();
+  const index = document.getElementById('updateSaleIndex').value;
+  const updatedSale = {
+    Date: document.getElementById('updateSaleDate').value,
+    Venue: document.getElementById('updateSaleVenue').value,
+    Workers: Array.from(document.getElementById('updateSaleWorkers').selectedOptions).map(opt => opt.value),
+    Status: document.getElementById('updateSaleStatus').value,
+    Forecast: document.getElementById('updateSaleForecast').value,
+    'Gross Sales': document.getElementById('updateSaleGross').value,
+    'Net Sales': document.getElementById('updateSaleNet').value,
+    Notes: document.getElementById('updateSaleNotes').value,
+    Promo: document.getElementById('updateSalePromo').value,
+    'Promo To Send': document.getElementById('updateSalePromoSend').value,
+    'Address / City': document.getElementById('updateSaleAddress').value,
+    Contact: document.getElementById('updateSaleContact').value,
+    Phone: document.getElementById('updateSalePhone').value,
+    Email: document.getElementById('updateSaleEmail').value,
+    Times: document.getElementById('updateSaleTimes').value,
+    'Show Info': document.getElementById('updateSaleShowInfo').value
+  };
+  await updateSaleApi(index, updatedSale);
+  document.getElementById('updateSaleModal').style.display = 'none';
+  await refreshScheduleData();
+};
+
+document.getElementById('exitUpdateSaleModalBtn').onclick = function() {
+  document.getElementById('updateSaleModal').style.display = 'none';
 };
 
 function closeUpdateSaleModal() {
@@ -334,11 +372,15 @@ function renderCalendar(trailerData) {
             return !isNaN(wdDate) && wdDate.getFullYear() === year && wdDate.getMonth() === month && wdDate.getDate() === day;
         });
         if (events.length > 0) {
-            events.forEach(ev => {
+            events.forEach((ev, i) => {
                 const evDiv = document.createElement('div');
-                evDiv.className = 'calendar-event';
+                evDiv.className = 'calendar-event calendar-venue-visit';
                 let workerText = ev.Workers ? `<div class='calendar-workers'>${Array.isArray(ev.Workers) ? ev.Workers.join(', ') : ev.Workers}</div>` : '';
                 evDiv.innerHTML = `${ev.Venue || ''}${workerText}`;
+                evDiv.addEventListener('dblclick', function(e) {
+                  openUpdateSaleModal(filteredScheduleData.findIndex(row => row.Date === ev.Date && row.Venue === ev.Venue));
+                  e.stopPropagation();
+                });
                 evDiv.addEventListener('mousemove', function(e) {
                     showVenueSalesPopup(ev.Venue || '', e.clientX, e.clientY);
                 });
@@ -351,11 +393,15 @@ function renderCalendar(trailerData) {
         if (workDays.length > 0) {
             workDays.forEach(wd => {
                 const wdDiv = document.createElement('div');
-                wdDiv.className = 'calendar-workday';
+                wdDiv.className = 'calendar-workday calendar-workday-entry';
                 wdDiv.innerHTML = `<div class='workday-actions'>
                   <button class='workday-action-btn' title='Edit' onclick='openWorkDayModal("${wd.Date}",${wd._idx})'>&#9998;</button>
                   <button class='workday-action-btn' title='Delete' onclick='deleteWorkDayApi(${wd._idx})'>&#128465;</button>
                 </div><b>WORK DAY</b><br>${wd.Workers ? wd.Workers.join(', ') : ''}${wd.Time ? ' ('+wd.Time+')' : ''}${wd.Notes ? '<br>'+wd.Notes : ''}`;
+                wdDiv.addEventListener('dblclick', function(e) {
+                  openWorkDayModal(wd.Date, wd._idx);
+                  e.stopPropagation();
+                });
                 cell.appendChild(wdDiv);
             });
         }
@@ -954,7 +1000,7 @@ async function apiDelete(sheet, keyColumns, keyValues) {
   return await res.json();
 }
 
-async function populateVenueDropdown(selectId) {
+async function populateVenueDropdown(selectId, currentVenue = null) {
   const select = document.getElementById(selectId);
   select.innerHTML = '';
   try {
@@ -967,6 +1013,9 @@ async function populateVenueDropdown(selectId) {
         select.appendChild(opt);
       }
     });
+    if (currentVenue) {
+      select.value = currentVenue;
+    }
   } catch (err) {
     const opt = document.createElement('option');
     opt.value = '';
@@ -1255,4 +1304,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     setupCalendarDoubleClick();
     enableInlineEditing();
+    document.getElementById('closeUpdateSaleModal').onclick = closeUpdateSaleModal;
+    document.getElementById('exitUpdateSaleModalBtn').onclick = closeUpdateSaleModal;
 }); 
