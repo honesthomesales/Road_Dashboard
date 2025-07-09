@@ -722,6 +722,12 @@ input:checked + .toggle-slider:before {
   }
   #calendarView {
     display: block !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
   }
   #calendarTitle {
     color: #000 !important;
@@ -971,4 +977,33 @@ input:checked + .toggle-slider:before {
   #saleModal .modal-content .form-row label {
     flex: 1 0 80px;
   }
+} 
+
+.calendar-venue-visit {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 2px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.calendar-venue-visit:hover {
+  background: #218838 !important;
+}
+.calendar-workday-entry {
+  background: #007bff !important;
+  color: #fff !important;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 2px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.calendar-workday-entry:hover {
+  background: #0056b3 !important;
 } 

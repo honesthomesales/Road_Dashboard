@@ -45,9 +45,14 @@ function clearCaches() {
 }
 
 async function fetchScheduleData() {
-    const response = await fetch(currentMode.sheetUrl);
-    if (!response.ok) throw new Error("Failed to fetch data");
-    return await response.json();
+    try {
+        const response = await fetch(currentMode.sheetUrl);
+        if (!response.ok) throw new Error("Failed to fetch data");
+        return await response.json();
+    } catch (err) {
+        showMessage('Error loading data. Please try again later.');
+        throw err;
+    }
 }
 
 async function fetchSalesData(sheet) {
@@ -157,6 +162,11 @@ function formatCurrencyGreen(value) {
 function renderTablePage(page) {
     const tbody = document.getElementById('scheduleBody');
     tbody.innerHTML = "";
+    if (!filteredScheduleData || filteredScheduleData.length === 0) {
+        showMessage('No sales data available for this period.');
+        updatePaginationInfo();
+        return;
+    }
     const startIdx = (page - 1) * ROWS_PER_PAGE;
     const endIdx = startIdx + ROWS_PER_PAGE;
     const pageData = filteredScheduleData.slice(startIdx, endIdx);
@@ -170,7 +180,7 @@ function renderTablePage(page) {
             <td class="sales forecast-green">${formatCurrencyGreen(item.Forecast || item['Gross Sales'])}</td>
             <td class="sales gross-sales-green">${formatCurrencyGreen(item['Gross Sales'])}</td>
             <td class="sales net-sales-green">${formatCurrencyGreen(item['Net Sales'])}</td>
-            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})">Details</button><button class="detail-btn update-btn" onclick="openUpdateSaleModal(${startIdx + index})" style="margin-left:6px;">Update</button></td>
+            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})" tabindex="0" aria-label="Show details for row ${startIdx + index}">Details</button><button class="detail-btn update-btn" onclick="openUpdateSaleModal(${startIdx + index})" style="margin-left:6px;" tabindex="0" aria-label="Update sale for row ${startIdx + index}">Update</button></td>
         `;
         tbody.appendChild(row);
     });
@@ -628,7 +638,15 @@ function renderVisitCountTable2025(data) {
 
 // Update updateDashboardAnalytics to call this
 function updateDashboardAnalytics() {
-    if (!scheduleDataCache) return;
+    if (!scheduleDataCache || !scheduleDataCache.length) {
+        showMessage('No dashboard analytics data available.', 'visitCountBody', 2);
+        document.getElementById('ytdValue').textContent = '$0';
+        document.getElementById('avgPerMonth2025').textContent = '$0';
+        document.getElementById('avgPerMonth2024').textContent = '$0';
+        document.getElementById('totalForecast2025').textContent = '$0';
+        if (salesChart) salesChart.destroy();
+        return;
+    }
     renderSalesChart2025(scheduleDataCache);
     renderVisitCountTable2025(scheduleDataCache);
     // Calculate YTD gross sales for 2025
@@ -766,6 +784,10 @@ function renderAverageSaleTable(data) {
     venues.sort((a, b) => b.medianRounded - a.medianRounded);
     const tbody = document.getElementById('averageSaleBody');
     tbody.innerHTML = '';
+    if (!venues.length) {
+        showMessage('No venue sales data available.', 'averageSaleBody', 4);
+        return;
+    }
     venues.forEach(({ venue, count, totalGross, medianRounded }) => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -841,6 +863,10 @@ function populateCalendarPickers() {
 function renderCalendarWithPicker() {
     // Use trailerDataCache or scheduleDataCache for events
     const data = scheduleDataCache || [];
+    if (!data.length) {
+        showMessage('No calendar data available for this period.', 'calendarPlaceholder', 1);
+        return;
+    }
     renderCalendar(data);
 }
 
@@ -1131,7 +1157,28 @@ function enableInlineEditing() {
   });
 }
 
+// Utility: Show error or empty state messages
+const showMessage = (msg, targetId = 'scheduleBody', colspan = 8) => {
+    const tbody = document.getElementById(targetId);
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#e74c3c; font-weight:600;">${msg}</td></tr>`;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async function() {
+    // Accessibility: Add ARIA and tabindex to nav buttons
+    ['dailySalesBtn', 'calendarBtn', 'dashboardBtn', 'averageSaleBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.setAttribute('tabindex', '0');
+            btn.setAttribute('role', 'button');
+            btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
+            btn.setAttribute('aria-label', btn.textContent);
+            btn.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') btn.click();
+            });
+        }
+    });
     const showCalendarBtn = document.getElementById('showCalendarBtn');
     const calendarView = document.getElementById('calendarView');
     const tableView = document.getElementById('tableView');
