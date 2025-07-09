@@ -170,12 +170,48 @@ function renderTablePage(page) {
             <td class="sales forecast-green">${formatCurrencyGreen(item.Forecast || item['Gross Sales'])}</td>
             <td class="sales gross-sales-green">${formatCurrencyGreen(item['Gross Sales'])}</td>
             <td class="sales net-sales-green">${formatCurrencyGreen(item['Net Sales'])}</td>
-            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})">Details</button></td>
+            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})">Details</button><button class="detail-btn update-btn" onclick="openUpdateSaleModal(${startIdx + index})" style="margin-left:6px;">Update</button></td>
         `;
         tbody.appendChild(row);
     });
     updatePaginationInfo();
     enableStatusToggle();
+}
+
+window.openUpdateSaleModal = function(index) {
+  const item = filteredScheduleData[index];
+  if (!item) return;
+  document.getElementById('updateSaleModal').style.display = 'flex';
+  document.getElementById('updateSaleForm').reset();
+  document.getElementById('updateSaleIndex').value = index;
+  document.getElementById('updateSaleDate').value = item.Date ? item.Date.split(' ')[0] : '';
+  populateVenueDropdown('updateSaleVenue').then(() => {
+    document.getElementById('updateSaleVenue').value = item.Venue || '';
+  });
+  populateUpdateSaleWorkerDropdown(item.Workers);
+  document.getElementById('updateSaleNotes').value = item.Notes || '';
+};
+
+function closeUpdateSaleModal() {
+  document.getElementById('updateSaleModal').style.display = 'none';
+}
+
+function populateUpdateSaleWorkerDropdown(selectedWorkers) {
+  const select = document.getElementById('updateSaleWorkers');
+  select.innerHTML = '';
+  workerList.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    if (selectedWorkers && (Array.isArray(selectedWorkers) ? selectedWorkers.includes(name) : selectedWorkers === name)) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+  const addOpt = document.createElement('option');
+  addOpt.value = '__add_new__';
+  addOpt.textContent = 'Add new worker...';
+  select.appendChild(addOpt);
 }
 
 function enableStatusToggle() {
@@ -957,6 +993,7 @@ async function deleteVenue(venue) {
 async function updateAllVenueDropdowns() {
   // Add all select IDs that use venues here
   await populateVenueDropdown('saleVenue');
+  await populateVenueDropdown('updateSaleVenue'); // Added for update modal
   // Add more as needed
 }
 

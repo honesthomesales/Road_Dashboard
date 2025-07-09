@@ -266,7 +266,7 @@ header p {
     background: #222;
     padding: 12px 0;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
     position: sticky;
@@ -701,12 +701,27 @@ input:checked + .toggle-slider:before {
   .site-logo-container, .universal-toggle, .top-menu, .pagination-controls, .menu-btn, #dailySalesView, #dashboardView, #averageSaleView, .loading-spinner, .nav-buttons, .detail-btn, .close, .calendar-controls label, .calendar-controls select, .calendar-controls option {
     display: none !important;
   }
+  .site-logo-container {
+    display: block !important;
+    text-align: center !important;
+    margin: 0 auto 12px auto !important;
+    max-width: 340px !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+  .site-logo {
+    display: block !important;
+    margin: 0 auto !important;
+    max-width: 340px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  body > *:not(.site-logo-container):not(#calendarView) {
+    display: none !important;
+  }
   #calendarView {
     display: block !important;
-    margin: 0;
-    box-shadow: none !important;
-    background: #fff !important;
-    padding-bottom: 2.5in;
   }
   #calendarTitle {
     color: #000 !important;
@@ -846,32 +861,114 @@ input:checked + .toggle-slider:before {
 } 
 
 /* Add Sale Modal Styles */
+#saleModal .modal-content {
+  max-width: 420px;
+  width: 100%;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 32px 28px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+#saleModal h3 {
+  text-align: center;
+  margin-bottom: 18px;
+  color: #222;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
 #saleModal .form-row {
   margin-bottom: 18px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
 }
 #saleModal label {
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 4px;
   color: #764ba2;
+  font-size: 1rem;
 }
 #saleModal input[type="text"],
 #saleModal input[type="date"],
 #saleModal textarea,
 #saleModal select {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border: 1px solid #e9ecef;
-  border-radius: 5px;
+  border-radius: 6px;
   font-size: 1rem;
   margin-bottom: 2px;
   width: 100%;
   box-sizing: border-box;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+#saleModal input:focus,
+#saleModal textarea:focus,
+#saleModal select:focus {
+  border: 1.5px solid #764ba2;
+  outline: none;
 }
 #saleModal textarea {
   resize: vertical;
+  min-height: 120px;
+  font-size: 1rem;
+}
+#saleModal .modal-content .form-row:last-child {
+  margin-bottom: 0;
 }
 #saleModal button.menu-btn {
-  margin-top: 8px;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 10px 0;
+  width: 48%;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+#saleModal .modal-content .form-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+#saleModal .modal-content .form-row label {
+  flex: 1 0 120px;
+  margin-bottom: 0;
+}
+#saleModal .modal-content .form-row > *:not(label) {
+  flex: 2 1 0;
+}
+#saleModal .modal-content .form-row:last-child {
+  justify-content: flex-end;
+  gap: 12px;
+}
+#exitSaleModalBtn.menu-btn {
+  background: #e74c3c;
+  color: #fff;
+}
+#exitSaleModalBtn.menu-btn:hover {
+  background: #c0392b;
+}
+#saleModal button[type="submit"].menu-btn {
+  background: #39FF14;
+  color: #222;
+}
+#saleModal button[type="submit"].menu-btn:hover {
+  background: #222;
+  color: #39FF14;
+}
+@media (max-width: 600px) {
+  #saleModal .modal-content {
+    padding: 16px 6px 12px 6px;
+    max-width: 98vw;
+  }
+  #saleModal .modal-content .form-row label {
+    flex: 1 0 80px;
+  }
 } 

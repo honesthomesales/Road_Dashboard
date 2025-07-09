@@ -277,5 +277,36 @@
         </form>
       </div>
     </div>
+    <div id="updateSaleModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:420px;">
+        <span class="close" id="closeUpdateSaleModal">&times;</span>
+        <h3 id="updateSaleModalTitle">Update Sale</h3>
+        <form id="updateSaleForm">
+          <div class="form-row">
+            <label for="updateSaleDate">Date:</label>
+            <input type="date" id="updateSaleDate" name="updateSaleDate" required />
+          </div>
+          <div class="form-row">
+            <label for="updateSaleVenue">Venue:</label>
+            <select id="updateSaleVenue" name="updateSaleVenue"></select>
+          </div>
+          <div class="form-row">
+            <label for="updateSaleWorkers">Workers:</label>
+            <select id="updateSaleWorkers" name="updateSaleWorkers" multiple size="4"></select>
+            <input type="text" id="newUpdateSaleWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addUpdateSaleWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="updateSaleNotes">Notes:</label>
+            <textarea id="updateSaleNotes" name="updateSaleNotes" rows="6" style="min-height: 120px;"></textarea>
+          </div>
+          <input type="hidden" id="updateSaleIndex" value="" />
+          <div class="form-row" style="text-align:right;">
+            <button type="button" id="exitUpdateSaleModalBtn" class="menu-btn" style="background:#e74c3c; margin-right:8px;">Exit</button>
+            <button type="submit" class="menu-btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
 </body>
 </html> 
