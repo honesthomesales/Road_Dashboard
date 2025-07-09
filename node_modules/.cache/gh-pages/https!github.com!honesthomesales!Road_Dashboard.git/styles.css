@@ -1,0 +1,1009 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #39FF14 0%, #222 100%);
+    min-height: 100vh;
+    color: #222;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #39FF14;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    font-weight: 300;
+}
+
+header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.site-logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 340px;
+    width: 100%;
+    height: auto;
+}
+
+@media (max-width: 600px) {
+    .site-logo {
+        max-width: 180px;
+    }
+}
+
+.schedule-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.schedule-table th {
+    background: #f8f9fa;
+    padding: 16px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.schedule-table td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.schedule-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+}
+
+.schedule-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    display: inline-block;
+    min-width: 80px;
+}
+
+.status.confirmed {
+    background-color: #39FF14;
+    color: #222;
+}
+
+.status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status.cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-toggle.status-confirmed {
+  background: #28a745;
+  color: #fff;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.status-toggle.status-tbd {
+  background: #ffe066;
+  color: #222;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.forecast-green, .gross-sales-green, .net-sales-green {
+    color: #39FF14;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 300;
+}
+
+.close {
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.close:hover {
+    opacity: 0.7;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.detail-section h3 {
+    color: #495057;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+.detail-row {
+    display: flex;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+
+.detail-row label {
+    font-weight: 600;
+    color: #495057;
+    min-width: 120px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.detail-row span {
+    color: #333;
+    line-height: 1.5;
+}
+
+/* Detail Button Styles */
+.detail-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.detail-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.detail-btn:active {
+    transform: translateY(0);
+}
+
+.top-menu {
+    width: 100%;
+    background: #222;
+    padding: 12px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.menu-btn {
+    background: #39FF14;
+    color: #222;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+    transition: background 0.2s, color 0.2s;
+}
+.menu-btn:hover {
+    background: #222;
+    color: #39FF14;
+    border: 2px solid #39FF14;
+}
+.calendar-view {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 32px 24px;
+    margin-bottom: 32px;
+    margin-top: 24px;
+    text-align: center;
+}
+#calendarPlaceholder {
+    color: #aaa;
+    font-size: 1.2rem;
+    margin-top: 24px;
+}
+
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 auto;
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+}
+.calendar-table th, .calendar-table td {
+    border: 1px solid #e9ecef;
+    width: 14.28%;
+    height: 80px;
+    vertical-align: top;
+    padding: 4px 2px;
+    text-align: left;
+    font-size: 0.95rem;
+}
+.calendar-table th {
+    background: #667eea;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px 0;
+}
+.calendar-date {
+    font-weight: bold;
+    color: #764ba2;
+    margin-bottom: 4px;
+}
+.calendar-event {
+    background: #28a745;
+    color: white;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin: 2px 0;
+    font-size: 0.85rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.calendar-cell {
+    position: relative;
+}
+
+.loading-spinner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255,255,255,0.7);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #667eea;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spinner-text {
+    color: #764ba2;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 18px 0 0 0;
+    gap: 16px;
+}
+#pageInfo {
+    font-size: 1rem;
+    color: #764ba2;
+    font-weight: 500;
+}
+
+/* Universal Toggle Styles */
+.universal-toggle {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 16px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
+}
+
+.toggle-label {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 50px;
+    text-align: center;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+    transition: 0.4s;
+    border-radius: 34px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .toggle-slider {
+    background-color: #28a745;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(26px);
+}
+
+/* Adjust top menu position */
+.top-menu {
+    margin-top: 0;
+}
+
+/* Navigation Styles */
+.nav-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.nav-btn.active {
+    background: white;
+    color: #764ba2;
+    font-weight: 600;
+}
+
+/* Dashboard Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.dashboard-card h3 {
+    color: #495057;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+/* Analytics Table */
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.analytics-table th,
+.analytics-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.analytics-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.analytics-table td {
+    color: #333;
+}
+
+/* Forecast Summary */
+.forecast-summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecef;
+}
+
+.forecast-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.forecast-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.forecast-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #28a745;
+    font-family: 'Courier New', monospace;
+}
+
+/* Future Sales */
+.future-sales-container {
+    min-height: 200px;
+}
+
+.future-sales-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.future-sales-item:last-child {
+    border-bottom: none;
+}
+
+.future-sales-month {
+    font-weight: 600;
+    color: #495057;
+}
+
+.future-sales-amount {
+    font-weight: 600;
+    color: #28a745;
+    font-family: 'Courier New', monospace;
+}
+
+.future-forecast {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 2px solid #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    header h1 {
+        font-size: 2rem;
+    }
+    
+    .schedule-table {
+        font-size: 0.8rem;
+    }
+    
+    .schedule-table th,
+    .schedule-table td {
+        padding: 10px 8px;
+    }
+    
+    .status {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .detail-row label {
+        margin-bottom: 5px;
+        margin-right: 0;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .dashboard-card {
+        padding: 16px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+    
+    .forecast-summary {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .nav-buttons {
+        flex-direction: column;
+        gap: 4px;
+    }
+} 
+
+/* Print styles for calendar view */
+@media print {
+  body, html {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .site-logo-container, .universal-toggle, .top-menu, .pagination-controls, .menu-btn, #dailySalesView, #dashboardView, #averageSaleView, .loading-spinner, .nav-buttons, .detail-btn, .close, .calendar-controls label, .calendar-controls select, .calendar-controls option {
+    display: none !important;
+  }
+  .site-logo-container {
+    display: block !important;
+    text-align: center !important;
+    margin: 0 auto 12px auto !important;
+    max-width: 340px !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+  .site-logo {
+    display: block !important;
+    margin: 0 auto !important;
+    max-width: 340px !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  body > *:not(.site-logo-container):not(#calendarView) {
+    display: none !important;
+  }
+  #calendarView {
+    display: block !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  #calendarTitle {
+    color: #000 !important;
+    margin-bottom: 8px;
+  }
+  .calendar-table, .calendar-table th, .calendar-table td {
+    border: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+  .calendar-table th, .calendar-table td {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 12pt !important;
+    padding: 4px 2px !important;
+  }
+  .calendar-date, .calendar-event, .calendar-workday {
+    color: #000 !important;
+    background: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .calendar-workday {
+    border: none !important;
+    background: none !important;
+    color: #000 !important;
+    font-size: 11pt !important;
+    font-weight: normal;
+  }
+  #calendarPlaceholder {
+    color: #000 !important;
+    font-size: 1rem !important;
+    margin-top: 0 !important;
+  }
+  header, footer, .container > *:not(#calendarView) {
+    display: none !important;
+  }
+} 
+
+/* Work Day Modal Styles */
+#workDayModal {
+  display: none;
+  position: fixed;
+  z-index: 3000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(0,0,0,0.3);
+  align-items: center;
+  justify-content: center;
+}
+#workDayModal .modal-content {
+  background: #fff;
+  margin: 10% auto;
+  padding: 24px 20px 16px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+}
+#workDayModal .close {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  font-size: 1.5rem;
+  color: #764ba2;
+  cursor: pointer;
+}
+#workDayModal .form-row {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+}
+#workDayModal label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #764ba2;
+}
+#workDayModal input[type="text"],
+#workDayModal input[type="date"],
+#workDayModal textarea,
+#workDayModal select {
+  padding: 6px 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+#workDayModal textarea {
+  resize: vertical;
+}
+#workDayModal button.menu-btn {
+  margin-top: 8px;
+}
+@media print {
+  #workDayModal { display: none !important; }
+} 
+
+/* Work Day Edit/Delete Icon Styles */
+.calendar-workday {
+  position: relative;
+  background: #f3f3f3;
+  border: 1px dashed #764ba2;
+  border-radius: 6px;
+  margin: 2px 0;
+  padding: 4px 6px 4px 24px;
+  font-size: 0.95rem;
+  color: #222;
+}
+.calendar-workday .workday-actions {
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.calendar-workday .workday-action-btn {
+  background: none;
+  border: none;
+  color: #764ba2;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+#workDayWorker[multiple] {
+  min-height: 70px;
+  font-size: 1rem;
+} 
+
+/* Add Sale Modal Styles */
+#saleModal .modal-content {
+  max-width: 420px;
+  width: 100%;
+  margin: 40px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 32px 28px 24px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+#saleModal h3 {
+  text-align: center;
+  margin-bottom: 18px;
+  color: #222;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+#saleModal .form-row {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+#saleModal label {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #764ba2;
+  font-size: 1rem;
+}
+#saleModal input[type="text"],
+#saleModal input[type="date"],
+#saleModal textarea,
+#saleModal select {
+  padding: 8px 10px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  margin-bottom: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+#saleModal input:focus,
+#saleModal textarea:focus,
+#saleModal select:focus {
+  border: 1.5px solid #764ba2;
+  outline: none;
+}
+#saleModal textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-size: 1rem;
+}
+#saleModal .modal-content .form-row:last-child {
+  margin-bottom: 0;
+}
+#saleModal button.menu-btn {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 10px 0;
+  width: 48%;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+#saleModal .modal-content .form-row {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+#saleModal .modal-content .form-row label {
+  flex: 1 0 120px;
+  margin-bottom: 0;
+}
+#saleModal .modal-content .form-row > *:not(label) {
+  flex: 2 1 0;
+}
+#saleModal .modal-content .form-row:last-child {
+  justify-content: flex-end;
+  gap: 12px;
+}
+#exitSaleModalBtn.menu-btn {
+  background: #e74c3c;
+  color: #fff;
+}
+#exitSaleModalBtn.menu-btn:hover {
+  background: #c0392b;
+}
+#saleModal button[type="submit"].menu-btn {
+  background: #39FF14;
+  color: #222;
+}
+#saleModal button[type="submit"].menu-btn:hover {
+  background: #222;
+  color: #39FF14;
+}
+@media (max-width: 600px) {
+  #saleModal .modal-content {
+    padding: 16px 6px 12px 6px;
+    max-width: 98vw;
+  }
+  #saleModal .modal-content .form-row label {
+    flex: 1 0 80px;
+  }
+} 
+
+.calendar-venue-visit {
+  background: #28a745 !important;
+  color: #fff !important;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 2px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.calendar-venue-visit:hover {
+  background: #218838 !important;
+}
+.calendar-workday-entry {
+  background: #007bff !important;
+  color: #fff !important;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: 2px 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.calendar-workday-entry:hover {
+  background: #0056b3 !important;
+} 

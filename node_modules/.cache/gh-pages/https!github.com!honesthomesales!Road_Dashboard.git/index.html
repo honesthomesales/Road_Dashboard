@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Schedule Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="site-logo-container" style="text-align:center; margin-top:16px;">
+        <img src="logo.png" alt="The Scrub Shop Logo" class="site-logo" style="max-width:340px; width:100%; height:auto;">
+    </div>
+    <div id="loadingSpinner" class="loading-spinner" style="display:none;">
+        <div class="spinner"></div>
+        <div class="spinner-text">Loading...</div>
+    </div>
+    
+    <!-- Universal Toggle -->
+    <div class="universal-toggle">
+        <div class="toggle-container">
+            <span class="toggle-label">Trailer</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="modeToggle">
+                <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Camper</span>
+        </div>
+    </div>
+    
+    <nav class="top-menu">
+        <div class="nav-buttons">
+            <button id="dailySalesBtn" class="nav-btn active">Daily Sales</button>
+            <button id="calendarBtn" class="nav-btn">Show Calendar</button>
+            <button id="dashboardBtn" class="nav-btn">Dashboard</button>
+            <button id="averageSaleBtn" class="nav-btn">Venue</button>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <header>
+            <h1 id="dashboardTitle">Road Schedule Dashboard</h1>
+        </header>
+        
+        <!-- Daily Sales View -->
+        <main id="dailySalesView">
+            <div class="schedule-container" id="tableView">
+                <button id="addSaleBtn" class="menu-btn" style="margin-bottom:12px;">Add Sale</button>
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Day of Week</th>
+                            <th>Venue</th>
+                            <th>Status</th>
+                            <th>Forecast</th>
+                            <th>Gross Sales</th>
+                            <th>Net Sales</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scheduleBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+                <div class="pagination-controls">
+                    <button id="prevPageBtn" class="menu-btn">Previous</button>
+                    <span id="pageInfo"></span>
+                    <button id="nextPageBtn" class="menu-btn">Next</button>
+                </div>
+            </div>
+        </main>
+        <!-- Calendar View (now a sibling, not a child of dailySalesView) -->
+        <main id="calendarView" style="display:none;">
+            <h2 id="calendarTitle">This Month's Schedule (Calendar View)</h2>
+            <div class="calendar-controls" style="margin-bottom: 16px; display: flex; gap: 8px; align-items: center;">
+                <label for="calendarMonth">Month:</label>
+                <select id="calendarMonth"></select>
+                <label for="calendarYear">Year:</label>
+                <select id="calendarYear"></select>
+                <button id="printCalendarBtn" class="menu-btn" style="margin-left:16px;">Print Calendar</button>
+                <button id="addWorkDayBtn" class="menu-btn" style="margin-left:8px;">WORK DAY</button>
+            </div>
+            <div id="calendarPlaceholder">[Calendar will appear here]</div>
+        </main>
+        
+        <!-- Dashboard View -->
+        <main id="dashboardView" style="display:none;">
+            <div class="dashboard-grid">
+                <!-- Sales Chart Section (Left) -->
+                <div class="dashboard-card" style="flex: 2; min-width: 320px;">
+                    <div class="ytd-summary" style="font-size:1.3rem; font-weight:600; margin-bottom:8px;">
+                        YTD: <span id="ytdValue">$0</span>
+                    </div>
+                    <div class="avg-summary" style="font-size:1.1rem; font-weight:500; margin-bottom:8px;">
+                        2025 Average Per Month: <span id="avgPerMonth2025">$0</span>
+                    </div>
+                    <h3>2025 Gross Sales & Forecast by Month</h3>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <!-- Table Section (Right) -->
+                <div class="dashboard-card" style="flex: 1; min-width: 200px;">
+                    <h3>2025 Visits by Month</h3>
+                    <div class="table-container">
+                        <table class="analytics-table">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Visit Count</th>
+                                </tr>
+                            </thead>
+                            <tbody id="visitCountBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="forecast-summary">
+                        <div class="forecast-item">
+                            <span class="forecast-label">Total Forecast:</span>
+                            <span id="totalForecast2025" class="forecast-value">$0</span>
+                        </div>
+                        <div class="forecast-item">
+                            <span class="forecast-label">2024 Average Per Month:</span>
+                            <span id="avgPerMonth2024" class="forecast-value">$0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- Average Sale View -->
+        <main id="averageSaleView" style="display:none;">
+            <div class="dashboard-card">
+                <h2 id="averageSaleTitle">Venue</h2>
+                <div class="table-container">
+                    <table class="analytics-table">
+                        <thead>
+                            <tr>
+                                <th>Venue</th>
+                                <th>Visit Count</th>
+                                <th>Total Gross Sales</th>
+                                <th>Average Gross Sale</th>
+                            </tr>
+                        </thead>
+                        <tbody id="averageSaleBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal for details -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Venue Details</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <div class="detail-section">
+                        <h3>General Information</h3>
+                        <div class="detail-row">
+                            <label>Notes:</label>
+                            <span id="modalNotes"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Promo:</label>
+                            <span id="modalPromo"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Promo To Send:</label>
+                            <span id="modalPromoSend"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Workers:</label>
+                            <span id="modalWorkers"></span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Location & Contact</h3>
+                        <div class="detail-row">
+                            <label>Address / City:</label>
+                            <span id="modalAddress"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Contact:</label>
+                            <span id="modalContact"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Phone:</label>
+                            <span id="modalPhone"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Email:</label>
+                            <span id="modalEmail"></span>
+                        </div>
+                    </div>
+                    <div class="detail-section">
+                        <h3>Event Details</h3>
+                        <div class="detail-row">
+                            <label>Times:</label>
+                            <span id="modalTimes"></span>
+                        </div>
+                        <div class="detail-row">
+                            <label>Show Info:</label>
+                            <span id="modalShowInfo"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+    <div id="workDayModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:400px;">
+        <span class="close" id="closeWorkDayModal">&times;</span>
+        <h3 id="workDayModalTitle">Add Work Day</h3>
+        <form id="workDayForm">
+          <div class="form-row">
+            <label for="workDayDate">Date:</label>
+            <input type="date" id="workDayDate" name="workDayDate" required />
+          </div>
+          <div class="form-row">
+            <label for="workDayWorker">Who Should Work:</label>
+            <select id="workDayWorker" name="workDayWorker" multiple size="4"></select>
+            <input type="text" id="newWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="workDayTime">Time:</label>
+            <input type="text" id="workDayTime" name="workDayTime" placeholder="e.g. 9am-5pm" />
+          </div>
+          <div class="form-row">
+            <label for="workDayNotes">Notes:</label>
+            <textarea id="workDayNotes" name="workDayNotes" rows="2"></textarea>
+          </div>
+          <input type="hidden" id="workDayEditIndex" value="" />
+          <div class="form-row" style="text-align:right;">
+            <button type="submit" class="menu-btn">Save Work Day</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="saleModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:400px;">
+        <span class="close" id="closeSaleModal">&times;</span>
+        <h3 id="saleModalTitle">Add Sale</h3>
+        <form id="saleForm">
+          <div class="form-row">
+            <label for="saleDate">Date:</label>
+            <input type="date" id="saleDate" name="saleDate" required />
+          </div>
+          <div class="form-row">
+            <label for="saleVenue">Venue:</label>
+            <select id="saleVenue" name="saleVenue"></select>
+          </div>
+          <div class="form-row">
+            <label for="saleWorkers">Workers:</label>
+            <select id="saleWorkers" name="saleWorkers" multiple size="4"></select>
+            <input type="text" id="newSaleWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addSaleWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="saleNotes">Notes:</label>
+            <textarea id="saleNotes" name="saleNotes" rows="6" style="min-height: 120px;"></textarea>
+          </div>
+          <input type="hidden" id="saleEditIndex" value="" />
+          <div class="form-row" style="text-align:right;">
+            <button type="button" id="exitSaleModalBtn" class="menu-btn" style="background:#e74c3c; margin-right:8px;">Exit</button>
+            <button type="submit" class="menu-btn">Save Sale</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="updateSaleModal" class="modal" style="display:none;">
+      <div class="modal-content" style="max-width:420px;">
+        <span class="close" id="closeUpdateSaleModal">&times;</span>
+        <h3 id="updateSaleModalTitle">Update Sale</h3>
+        <form id="updateSaleForm">
+          <div class="form-row">
+            <label for="updateSaleDate">Date:</label>
+            <input type="date" id="updateSaleDate" name="updateSaleDate" required />
+          </div>
+          <div class="form-row">
+            <label for="updateSaleVenue">Venue:</label>
+            <select id="updateSaleVenue" name="updateSaleVenue"></select>
+          </div>
+          <div class="form-row">
+            <label for="updateSaleWorkers">Workers:</label>
+            <select id="updateSaleWorkers" name="updateSaleWorkers" multiple size="4"></select>
+            <input type="text" id="newUpdateSaleWorkerInput" placeholder="Add new worker..." style="display:none; margin-top:4px;" />
+            <button type="button" id="addUpdateSaleWorkerBtn" style="margin-top:4px;">Add Worker</button>
+          </div>
+          <div class="form-row">
+            <label for="updateSaleNotes">Notes:</label>
+            <textarea id="updateSaleNotes" name="updateSaleNotes" rows="6" style="min-height: 120px;"></textarea>
+          </div>
+          <input type="hidden" id="updateSaleIndex" value="" />
+          <div class="form-row" style="text-align:right;">
+            <button type="button" id="exitUpdateSaleModalBtn" class="menu-btn" style="background:#e74c3c; margin-right:8px;">Exit</button>
+            <button type="submit" class="menu-btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+</body>
+</html> 
