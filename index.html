@@ -256,28 +256,8 @@
             <input type="date" id="saleDate" name="saleDate" required />
           </div>
           <div class="form-row">
-            <label for="saleDay">Day of Week:</label>
-            <input type="text" id="saleDay" name="saleDay" readonly />
-          </div>
-          <div class="form-row">
             <label for="saleVenue">Venue:</label>
-            <input type="text" id="saleVenue" name="saleVenue" />
-          </div>
-          <div class="form-row">
-            <label for="saleStatus">Status:</label>
-            <input type="text" id="saleStatus" name="saleStatus" />
-          </div>
-          <div class="form-row">
-            <label for="saleForecast">Forecast:</label>
-            <input type="number" id="saleForecast" name="saleForecast" />
-          </div>
-          <div class="form-row">
-            <label for="saleGross">Gross Sales:</label>
-            <input type="number" id="saleGross" name="saleGross" />
-          </div>
-          <div class="form-row">
-            <label for="saleNet">Net Sales:</label>
-            <input type="number" id="saleNet" name="saleNet" />
+            <select id="saleVenue" name="saleVenue"></select>
           </div>
           <div class="form-row">
             <label for="saleWorkers">Workers:</label>
@@ -287,10 +267,11 @@
           </div>
           <div class="form-row">
             <label for="saleNotes">Notes:</label>
-            <textarea id="saleNotes" name="saleNotes" rows="2"></textarea>
+            <textarea id="saleNotes" name="saleNotes" rows="6" style="min-height: 120px;"></textarea>
           </div>
           <input type="hidden" id="saleEditIndex" value="" />
           <div class="form-row" style="text-align:right;">
+            <button type="button" id="exitSaleModalBtn" class="menu-btn" style="background:#e74c3c; margin-right:8px;">Exit</button>
             <button type="submit" class="menu-btn">Save Sale</button>
           </div>
         </form>

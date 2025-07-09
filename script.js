@@ -166,7 +166,7 @@ function renderTablePage(page) {
             <td>${formatDateMDY(item.Date)}</td>
             <td>${item.Day || ''}</td>
             <td>${item.Venue || ''}</td>
-            <td><span class="status ${item.Status ? item.Status.toLowerCase() : ''}">${item.Status || ''}</span></td>
+            <td><span class="status-toggle ${item.Status === 'Confirmed' ? 'status-confirmed' : 'status-tbd'}" data-row="${startIdx + index}">${item.Status || 'TBD'}</span></td>
             <td class="sales forecast-green">${formatCurrencyGreen(item.Forecast || item['Gross Sales'])}</td>
             <td class="sales gross-sales-green">${formatCurrencyGreen(item['Gross Sales'])}</td>
             <td class="sales net-sales-green">${formatCurrencyGreen(item['Net Sales'])}</td>
@@ -175,6 +175,22 @@ function renderTablePage(page) {
         tbody.appendChild(row);
     });
     updatePaginationInfo();
+    enableStatusToggle();
+}
+
+function enableStatusToggle() {
+  document.querySelectorAll('.status-toggle').forEach(el => {
+    el.onclick = async function() {
+      const rowIdx = parseInt(this.getAttribute('data-row'), 10);
+      const item = filteredScheduleData[rowIdx];
+      if (!item) return;
+      const newStatus = (item.Status === 'Confirmed') ? 'TBD' : 'Confirmed';
+      // Determine sheet
+      const sheet = currentMode === MODES.CAMPER ? 'Camper_History' : 'Trailer_History';
+      await updateSaleField(sheet, ['Date', 'Venue'], [item.Date, item.Venue], 'Status', newStatus);
+      await reloadSalesTable(sheet);
+    };
+  });
 }
 
 function updatePaginationInfo() {
@@ -977,11 +993,11 @@ function enableInlineEditing() {
     if (!cell) return;
     const row = cell.parentElement;
     const colIdx = Array.from(row.children).indexOf(cell);
-    // Only allow editing for Status (3), Gross Sales (5), Net Sales (6)
-    if (![3, 5, 6].includes(colIdx)) return;
+    // Only allow editing for Gross Sales (5), Net Sales (6)
+    if (![5, 6].includes(colIdx)) return;
     const originalValue = cell.textContent;
     const input = document.createElement('input');
-    input.type = (colIdx === 3) ? 'text' : 'number';
+    input.type = 'number';
     input.value = originalValue.replace(/[$,]/g, '');
     input.style.width = '90%';
     cell.innerHTML = '';
@@ -1009,7 +1025,6 @@ function enableInlineEditing() {
       // Determine sheet
       const sheet = currentMode === MODES.CAMPER ? 'Camper_History' : 'Trailer_History';
       let updateCol;
-      if (colIdx === 3) updateCol = 'Status';
       if (colIdx === 5) updateCol = 'Gross Sales';
       if (colIdx === 6) updateCol = 'Net Sales';
       // Use Date + Venue as key
@@ -1138,6 +1153,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         openSaleModal();
     });
     document.getElementById('closeSaleModal').addEventListener('click', closeSaleModal);
+    document.getElementById('exitSaleModalBtn').addEventListener('click', closeSaleModal);
     document.getElementById('saleDate').addEventListener('change', updateSaleDayOfWeek);
     document.getElementById('saleWorkers').addEventListener('change', function(e) {
         const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
