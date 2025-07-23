@@ -34,8 +34,10 @@ let workerList = ["Hayden", "Gavin", "Aiden", "Jayden", "Billy M", "David"];
 let customSalesEntries = [];
 
 function updateTitles() {
-    document.getElementById('dashboardTitle').textContent = currentMode.title;
-    document.getElementById('calendarTitle').textContent = currentMode.calendarTitle;
+    const dashboardTitle = document.getElementById('dashboardTitle');
+    const calendarTitle = document.getElementById('calendarTitle');
+    if (dashboardTitle) dashboardTitle.textContent = currentMode.title;
+    if (calendarTitle) calendarTitle.textContent = currentMode.calendarTitle;
 }
 
 function clearCaches() {
@@ -45,9 +47,14 @@ function clearCaches() {
 }
 
 async function fetchScheduleData() {
-    const response = await fetch(currentMode.sheetUrl);
-    if (!response.ok) throw new Error("Failed to fetch data");
-    return await response.json();
+    try {
+        const response = await fetch(currentMode.sheetUrl);
+        if (!response.ok) throw new Error("Failed to fetch data");
+        return await response.json();
+    } catch (err) {
+        showMessage('Error loading data. Please try again later.');
+        throw err;
+    }
 }
 
 async function fetchSalesData(sheet) {
@@ -157,6 +164,11 @@ function formatCurrencyGreen(value) {
 function renderTablePage(page) {
     const tbody = document.getElementById('scheduleBody');
     tbody.innerHTML = "";
+    if (!filteredScheduleData || filteredScheduleData.length === 0) {
+        showMessage('No sales data available for this period.');
+        updatePaginationInfo();
+        return;
+    }
     const startIdx = (page - 1) * ROWS_PER_PAGE;
     const endIdx = startIdx + ROWS_PER_PAGE;
     const pageData = filteredScheduleData.slice(startIdx, endIdx);
@@ -170,7 +182,7 @@ function renderTablePage(page) {
             <td class="sales forecast-green">${formatCurrencyGreen(item.Forecast || item['Gross Sales'])}</td>
             <td class="sales gross-sales-green">${formatCurrencyGreen(item['Gross Sales'])}</td>
             <td class="sales net-sales-green">${formatCurrencyGreen(item['Net Sales'])}</td>
-            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})">Details</button><button class="detail-btn update-btn" onclick="openUpdateSaleModal(${startIdx + index})" style="margin-left:6px;">Update</button></td>
+            <td><button class="detail-btn" onclick="showDetails(${startIdx + index})" tabindex="0" aria-label="Show details for row ${startIdx + index}">Details</button><button class="detail-btn update-btn" onclick="openUpdateSaleModal(${startIdx + index})" style="margin-left:6px;" tabindex="0" aria-label="Update sale for row ${startIdx + index}">Update</button></td>
         `;
         tbody.appendChild(row);
     });
@@ -180,24 +192,43 @@ function renderTablePage(page) {
 
 function openUpdateSaleModal(index) {
   const sale = filteredScheduleData[index];
-  document.getElementById('updateSaleIndex').value = index;
-  document.getElementById('updateSaleDate').value = sale.Date || '';
-  populateVenueDropdown('updateSaleVenue', sale.Venue);
-  populateWorkerDropdown('updateSaleWorkers', sale.Workers);
-  document.getElementById('updateSaleStatus').value = sale.Status || 'Confirmed';
-  document.getElementById('updateSaleForecast').value = sale.Forecast || '';
-  document.getElementById('updateSaleGross').value = sale['Gross Sales'] || '';
-  document.getElementById('updateSaleNet').value = sale['Net Sales'] || '';
-  document.getElementById('updateSaleNotes').value = sale.Notes || '';
-  document.getElementById('updateSalePromo').value = sale.Promo || '';
-  document.getElementById('updateSalePromoSend').value = sale['Promo To Send'] || '';
-  document.getElementById('updateSaleAddress').value = sale['Address / City'] || '';
-  document.getElementById('updateSaleContact').value = sale.Contact || '';
-  document.getElementById('updateSalePhone').value = sale.Phone || '';
-  document.getElementById('updateSaleEmail').value = sale.Email || '';
-  document.getElementById('updateSaleTimes').value = sale.Times || '';
-  document.getElementById('updateSaleShowInfo').value = sale['Show Info'] || '';
-  document.getElementById('updateSaleModal').style.display = 'block';
+  const updateSaleIndex = document.getElementById('updateSaleIndex');
+  const updateSaleDate = document.getElementById('updateSaleDate');
+  const updateSaleVenue = document.getElementById('updateSaleVenue');
+  const updateSaleWorkers = document.getElementById('updateSaleWorkers');
+  const updateSaleStatus = document.getElementById('updateSaleStatus');
+  const updateSaleForecast = document.getElementById('updateSaleForecast');
+  const updateSaleGross = document.getElementById('updateSaleGross');
+  const updateSaleNet = document.getElementById('updateSaleNet');
+  const updateSaleNotes = document.getElementById('updateSaleNotes');
+  const updateSalePromo = document.getElementById('updateSalePromo');
+  const updateSalePromoSend = document.getElementById('updateSalePromoSend');
+  const updateSaleAddress = document.getElementById('updateSaleAddress');
+  const updateSaleContact = document.getElementById('updateSaleContact');
+  const updateSalePhone = document.getElementById('updateSalePhone');
+  const updateSaleEmail = document.getElementById('updateSaleEmail');
+  const updateSaleTimes = document.getElementById('updateSaleTimes');
+  const updateSaleShowInfo = document.getElementById('updateSaleShowInfo');
+  const updateSaleModal = document.getElementById('updateSaleModal');
+
+  if (updateSaleIndex) updateSaleIndex.value = index;
+  if (updateSaleDate) updateSaleDate.value = sale.Date || '';
+  if (updateSaleVenue) populateVenueDropdown('updateSaleVenue', sale.Venue);
+  if (updateSaleWorkers) populateUpdateSaleWorkerDropdown(sale.Workers);
+  if (updateSaleStatus) updateSaleStatus.value = sale.Status || 'Confirmed';
+  if (updateSaleForecast) updateSaleForecast.value = sale.Forecast || '';
+  if (updateSaleGross) updateSaleGross.value = sale['Gross Sales'] || '';
+  if (updateSaleNet) updateSaleNet.value = sale['Net Sales'] || '';
+  if (updateSaleNotes) updateSaleNotes.value = sale.Notes || '';
+  if (updateSalePromo) updateSalePromo.value = sale.Promo || '';
+  if (updateSalePromoSend) updateSalePromoSend.value = sale['Promo To Send'] || '';
+  if (updateSaleAddress) updateSaleAddress.value = sale['Address / City'] || '';
+  if (updateSaleContact) updateSaleContact.value = sale.Contact || '';
+  if (updateSalePhone) updateSalePhone.value = sale.Phone || '';
+  if (updateSaleEmail) updateSaleEmail.value = sale.Email || '';
+  if (updateSaleTimes) updateSaleTimes.value = sale.Times || '';
+  if (updateSaleShowInfo) updateSaleShowInfo.value = sale['Show Info'] || '';
+  if (updateSaleModal) updateSaleModal.style.display = 'block';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -237,12 +268,9 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-document.getElementById('exitUpdateSaleModalBtn').onclick = function() {
-  document.getElementById('updateSaleModal').style.display = 'none';
-};
-
 function closeUpdateSaleModal() {
-  document.getElementById('updateSaleModal').style.display = 'none';
+  const updateSaleModal = document.getElementById('updateSaleModal');
+  if (updateSaleModal) updateSaleModal.style.display = 'none';
 }
 
 function populateUpdateSaleWorkerDropdown(selectedWorkers) {
@@ -281,9 +309,11 @@ function enableStatusToggle() {
 function updatePaginationInfo() {
     const pageInfo = document.getElementById('pageInfo');
     const totalPages = Math.ceil(filteredScheduleData.length / ROWS_PER_PAGE) || 1;
-    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-    document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    if (prevPageBtn) prevPageBtn.disabled = currentPage === 1;
+    if (nextPageBtn) nextPageBtn.disabled = currentPage === totalPages;
 }
 
 function getCurrentMonthYear() {
@@ -430,30 +460,46 @@ function renderCalendar(trailerData) {
 function showDetails(index) {
     const item = filteredScheduleData[index];
     if (!item) return;
-    document.getElementById('modalTitle').textContent = `${item.Venue || ''} - ${item.Date || ''}`;
-    document.getElementById('modalNotes').textContent = item.Notes || item['Notes'] || '';
-    document.getElementById('modalPromo').textContent = item.Promo || '';
-    document.getElementById('modalPromoSend').textContent = item['Promo To Send'] || '';
-    document.getElementById('modalAddress').textContent = item['Address / City'] || '';
-    document.getElementById('modalContact').textContent = item.Contact || '';
-    document.getElementById('modalPhone').textContent = item.Phone || '';
-    document.getElementById('modalEmail').textContent = item.Email || '';
-    document.getElementById('modalTimes').textContent = item.Times || '';
-    document.getElementById('modalShowInfo').textContent = item['Show Info'] || '';
-    document.getElementById('modalWorkers').textContent = item.Workers ? item.Workers.join(', ') : '';
-    document.getElementById('detailModal').style.display = 'block';
+    const modalTitle = document.getElementById('modalTitle');
+    const modalNotes = document.getElementById('modalNotes');
+    const modalPromo = document.getElementById('modalPromo');
+    const modalPromoSend = document.getElementById('modalPromoSend');
+    const modalAddress = document.getElementById('modalAddress');
+    const modalContact = document.getElementById('modalContact');
+    const modalPhone = document.getElementById('modalPhone');
+    const modalEmail = document.getElementById('modalEmail');
+    const modalTimes = document.getElementById('modalTimes');
+    const modalShowInfo = document.getElementById('modalShowInfo');
+    const modalWorkers = document.getElementById('modalWorkers');
+    const detailModal = document.getElementById('detailModal');
+
+    if (modalTitle) modalTitle.textContent = `${item.Venue || ''} - ${item.Date || ''}`;
+    if (modalNotes) modalNotes.textContent = item.Notes || item['Notes'] || '';
+    if (modalPromo) modalPromo.textContent = item.Promo || '';
+    if (modalPromoSend) modalPromoSend.textContent = item['Promo To Send'] || '';
+    if (modalAddress) modalAddress.textContent = item['Address / City'] || '';
+    if (modalContact) modalContact.textContent = item.Contact || '';
+    if (modalPhone) modalPhone.textContent = item.Phone || '';
+    if (modalEmail) modalEmail.textContent = item.Email || '';
+    if (modalTimes) modalTimes.textContent = item.Times || '';
+    if (modalShowInfo) modalShowInfo.textContent = item['Show Info'] || '';
+    if (modalWorkers) modalWorkers.textContent = item.Workers ? item.Workers.join(', ') : '';
+    if (detailModal) detailModal.style.display = 'block';
 }
 
 function closeModal() {
-    document.getElementById('detailModal').style.display = 'none';
+    const detailModal = document.getElementById('detailModal');
+    if (detailModal) detailModal.style.display = 'none';
 }
 
 function showSpinner() {
-    document.getElementById('loadingSpinner').style.display = 'flex';
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) loadingSpinner.style.display = 'flex';
 }
 
 function hideSpinner() {
-    document.getElementById('loadingSpinner').style.display = 'none';
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    if (loadingSpinner) loadingSpinner.style.display = 'none';
 }
 
 // Dashboard Analytics Functions
@@ -598,7 +644,8 @@ function renderFutureSales(monthlyData) {
         }
     });
     
-    document.getElementById('futureForecastTotal').textContent = formatCurrencyGreen(futureForecastTotal);
+    const futureForecastTotalElem = document.getElementById('futureForecastTotal');
+    if (futureForecastTotalElem) futureForecastTotalElem.textContent = formatCurrencyGreen(futureForecastTotal);
 }
 
 function renderVisitCountTable2025(data) {
@@ -623,12 +670,25 @@ function renderVisitCountTable2025(data) {
         tbody.appendChild(row);
     });
     // Render total forecast
-    document.getElementById('totalForecast2025').textContent = `$${Math.round(totalForecast).toLocaleString()}`;
+    const totalForecast2025Elem = document.getElementById('totalForecast2025');
+    if (totalForecast2025Elem) totalForecast2025Elem.textContent = `$${Math.round(totalForecast).toLocaleString()}`;
 }
 
 // Update updateDashboardAnalytics to call this
 function updateDashboardAnalytics() {
-    if (!scheduleDataCache) return;
+    if (!scheduleDataCache || !scheduleDataCache.length) {
+        showMessage('No dashboard analytics data available.', 'visitCountBody', 2);
+        const ytdValue = document.getElementById('ytdValue');
+        if (ytdValue) ytdValue.textContent = '$0';
+        const avgPerMonth2025 = document.getElementById('avgPerMonth2025');
+        if (avgPerMonth2025) avgPerMonth2025.textContent = '$0';
+        const avgPerMonth2024 = document.getElementById('avgPerMonth2024');
+        if (avgPerMonth2024) avgPerMonth2024.textContent = '$0';
+        const totalForecast2025 = document.getElementById('totalForecast2025');
+        if (totalForecast2025) totalForecast2025.textContent = '$0';
+        if (salesChart) salesChart.destroy();
+        return;
+    }
     renderSalesChart2025(scheduleDataCache);
     renderVisitCountTable2025(scheduleDataCache);
     // Calculate YTD gross sales for 2025
@@ -672,10 +732,16 @@ function updateDashboardAnalytics() {
 
 // Navigation Functions
 function setActiveNavButton(activeId) {
-    ['dailySalesBtn', 'calendarBtn', 'dashboardBtn', 'averageSaleBtn'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.classList.remove('active');
-    });
+    const dailySalesBtn = document.getElementById('dailySalesBtn');
+    const calendarBtn = document.getElementById('calendarBtn');
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    const averageSaleBtn = document.getElementById('averageSaleBtn');
+
+    if (dailySalesBtn) dailySalesBtn.classList.remove('active');
+    if (calendarBtn) calendarBtn.classList.remove('active');
+    if (dashboardBtn) dashboardBtn.classList.remove('active');
+    if (averageSaleBtn) averageSaleBtn.classList.remove('active');
+
     if (activeId) {
         const btn = document.getElementById(activeId);
         if (btn) btn.classList.add('active');
@@ -683,47 +749,72 @@ function setActiveNavButton(activeId) {
 }
 
 function showDailySales() {
-    document.getElementById('dailySalesView').style.display = 'block';
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('averageSaleView').style.display = 'none';
+    const dailySalesView = document.getElementById('dailySalesView');
+    const calendarView = document.getElementById('calendarView');
+    const dashboardView = document.getElementById('dashboardView');
+    const averageSaleView = document.getElementById('averageSaleView');
+
+    if (dailySalesView) dailySalesView.style.display = 'block';
+    if (calendarView) calendarView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'none';
+    if (averageSaleView) averageSaleView.style.display = 'none';
     setActiveNavButton('dailySalesBtn');
 }
 
 function showCalendarOnly() {
-    document.getElementById('dailySalesView').style.display = 'none';
-    document.getElementById('calendarView').style.display = '';
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('averageSaleView').style.display = 'none';
-    document.getElementById('dailySalesBtn').classList.remove('active');
-    document.getElementById('dashboardBtn').classList.remove('active');
-    document.getElementById('averageSaleBtn').classList.remove('active');
+    const dailySalesView = document.getElementById('dailySalesView');
+    const calendarView = document.getElementById('calendarView');
+    const dashboardView = document.getElementById('dashboardView');
+    const averageSaleView = document.getElementById('averageSaleView');
+
+    if (dailySalesView) dailySalesView.style.display = 'none';
+    if (calendarView) calendarView.style.display = '';
+    if (dashboardView) dashboardView.style.display = 'none';
+    if (averageSaleView) averageSaleView.style.display = 'none';
+    if (document.getElementById('dailySalesBtn')) document.getElementById('dailySalesBtn').classList.remove('active');
+    if (document.getElementById('dashboardBtn')) document.getElementById('dashboardBtn').classList.remove('active');
+    if (document.getElementById('averageSaleBtn')) document.getElementById('averageSaleBtn').classList.remove('active');
     renderCalendarWithPicker();
 }
 
 function showCalendarScreen() {
-    document.getElementById('calendarView').style.display = '';
-    document.getElementById('dailySalesView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('averageSaleView').style.display = 'none';
+    const calendarView = document.getElementById('calendarView');
+    const dailySalesView = document.getElementById('dailySalesView');
+    const dashboardView = document.getElementById('dashboardView');
+    const averageSaleView = document.getElementById('averageSaleView');
+
+    if (calendarView) calendarView.style.display = '';
+    if (dailySalesView) dailySalesView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'none';
+    if (averageSaleView) averageSaleView.style.display = 'none';
     setActiveNavButton('calendarBtn');
     renderCalendarWithPicker();
 }
 
 function showDashboard() {
-    document.getElementById('dailySalesView').style.display = 'none';
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'block';
-    document.getElementById('averageSaleView').style.display = 'none';
+    const dailySalesView = document.getElementById('dailySalesView');
+    const calendarView = document.getElementById('calendarView');
+    const dashboardView = document.getElementById('dashboardView');
+    const averageSaleView = document.getElementById('averageSaleView');
+
+    if (dailySalesView) dailySalesView.style.display = 'none';
+    if (calendarView) calendarView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'block';
+    if (averageSaleView) averageSaleView.style.display = 'none';
     setActiveNavButton('dashboardBtn');
     updateDashboardAnalytics();
 }
 
 function showAverageSale() {
-    document.getElementById('dailySalesView').style.display = 'none';
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'none';
-    document.getElementById('averageSaleView').style.display = 'block';
+    const dailySalesView = document.getElementById('dailySalesView');
+    const calendarView = document.getElementById('calendarView');
+    const dashboardView = document.getElementById('dashboardView');
+    const averageSaleView = document.getElementById('averageSaleView');
+
+    if (dailySalesView) dailySalesView.style.display = 'none';
+    if (calendarView) calendarView.style.display = 'none';
+    if (dashboardView) dashboardView.style.display = 'none';
+    if (averageSaleView) averageSaleView.style.display = 'block';
     setActiveNavButton('averageSaleBtn');
     renderAverageSaleTable(scheduleDataCache || []);
 }
@@ -766,6 +857,10 @@ function renderAverageSaleTable(data) {
     venues.sort((a, b) => b.medianRounded - a.medianRounded);
     const tbody = document.getElementById('averageSaleBody');
     tbody.innerHTML = '';
+    if (!venues.length) {
+        showMessage('No venue sales data available.', 'averageSaleBody', 4);
+        return;
+    }
     venues.forEach(({ venue, count, totalGross, medianRounded }) => {
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -779,13 +874,17 @@ function renderAverageSaleTable(data) {
 }
 
 async function switchMode() {
-    const isCamper = document.getElementById('modeToggle').checked;
-    currentMode = isCamper ? MODES.CAMPER : MODES.TRAILER;
+    const isCamper = document.getElementById('modeToggle');
+    if (!isCamper) return;
+    const isCamperChecked = isCamper.checked;
+    currentMode = isCamperChecked ? MODES.CAMPER : MODES.TRAILER;
     updateTitles();
     clearCaches();
     // Reset view to table
-    document.getElementById('calendarView').style.display = 'none';
-    document.getElementById('tableView').style.display = '';
+    const calendarView = document.getElementById('calendarView');
+    const tableView = document.getElementById('tableView');
+    if (calendarView) calendarView.style.display = 'none';
+    if (tableView) tableView.style.display = '';
     // Reload data
     showSpinner();
     try {
@@ -804,35 +903,39 @@ function populateCalendarPickers() {
     const monthSelect = document.getElementById('calendarMonth');
     const yearSelect = document.getElementById('calendarYear');
     // Populate months
-    monthSelect.innerHTML = '';
-    monthNames.forEach((m, i) => {
-        const opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = m;
-        monthSelect.appendChild(opt);
-    });
+    if (monthSelect) {
+        monthSelect.innerHTML = '';
+        monthNames.forEach((m, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = m;
+            monthSelect.appendChild(opt);
+        });
+    }
     // Populate years (from 2022 to current year + 2)
     const now = new Date();
     const minYear = 2022;
     const maxYear = now.getFullYear() + 2;
-    yearSelect.innerHTML = '';
-    for (let y = minYear; y <= maxYear; y++) {
-        const opt = document.createElement('option');
-        opt.value = y;
-        opt.textContent = y;
-        yearSelect.appendChild(opt);
+    if (yearSelect) {
+        yearSelect.innerHTML = '';
+        for (let y = minYear; y <= maxYear; y++) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            yearSelect.appendChild(opt);
+        }
     }
     // Set default to current month/year
     calendarSelectedMonth = now.getMonth();
     calendarSelectedYear = now.getFullYear();
-    monthSelect.value = calendarSelectedMonth;
-    yearSelect.value = calendarSelectedYear;
+    if (monthSelect) monthSelect.value = calendarSelectedMonth;
+    if (yearSelect) yearSelect.value = calendarSelectedYear;
     // Add event listeners
-    monthSelect.addEventListener('change', function() {
+    if (monthSelect) monthSelect.addEventListener('change', function() {
         calendarSelectedMonth = parseInt(monthSelect.value, 10);
         renderCalendarWithPicker();
     });
-    yearSelect.addEventListener('change', function() {
+    if (yearSelect) yearSelect.addEventListener('change', function() {
         calendarSelectedYear = parseInt(yearSelect.value, 10);
         renderCalendarWithPicker();
     });
@@ -841,35 +944,51 @@ function populateCalendarPickers() {
 function renderCalendarWithPicker() {
     // Use trailerDataCache or scheduleDataCache for events
     const data = scheduleDataCache || [];
+    const calendarPlaceholder = document.getElementById('calendarPlaceholder');
+    if (!calendarPlaceholder) return;
+
+    if (!data.length) {
+        showMessage('No calendar data available for this period.', 'calendarPlaceholder', 1);
+        return;
+    }
     renderCalendar(data);
 }
 
 function openWorkDayModal(dateStr, editIndex = null) {
-    document.getElementById('workDayModal').style.display = 'flex';
-    document.getElementById('workDayForm').reset();
-    document.getElementById('newWorkerInput').style.display = 'none';
-    document.getElementById('workDayEditIndex').value = editIndex !== null ? editIndex : '';
+    const workDayModal = document.getElementById('workDayModal');
+    const workDayForm = document.getElementById('workDayForm');
+    const newWorkerInput = document.getElementById('newWorkerInput');
+    const workDayEditIndex = document.getElementById('workDayEditIndex');
+    const workDayModalTitle = document.getElementById('workDayModalTitle');
+    const workDayDate = document.getElementById('workDayDate');
+    const workDayTime = document.getElementById('workDayTime');
+    const workDayNotes = document.getElementById('workDayNotes');
+    const workDayWorker = document.getElementById('workDayWorker');
+
+    if (workDayModal) workDayModal.style.display = 'flex';
+    if (workDayForm) workDayForm.reset();
+    if (newWorkerInput) newWorkerInput.style.display = 'none';
+    if (workDayEditIndex) workDayEditIndex.value = editIndex !== null ? editIndex : '';
     populateWorkerDropdown();
-    document.getElementById('workDayModalTitle').textContent = editIndex !== null ? 'Edit Work Day' : 'Add Work Day';
+    if (workDayModalTitle) workDayModalTitle.textContent = editIndex !== null ? 'Edit Work Day' : 'Add Work Day';
     if (editIndex !== null) {
         const wd = workDayEntries[editIndex];
-        document.getElementById('workDayDate').value = wd.Date;
-        document.getElementById('workDayTime').value = wd.Time;
-        document.getElementById('workDayNotes').value = wd.Notes;
+        if (workDayDate) workDayDate.value = wd.Date;
+        if (workDayTime) workDayTime.value = wd.Time;
+        if (workDayNotes) workDayNotes.value = wd.Notes;
         // Set selected workers
-        const select = document.getElementById('workDayWorker');
-        Array.from(select.options).forEach(opt => {
-            opt.selected = wd.Workers && wd.Workers.includes(opt.value);
-        });
+        if (workDayWorker) populateUpdateSaleWorkerDropdown(wd.Workers);
     } else if (dateStr) {
-        document.getElementById('workDayDate').value = dateStr;
+        if (workDayDate) workDayDate.value = dateStr;
     }
 }
 function closeWorkDayModal() {
-    document.getElementById('workDayModal').style.display = 'none';
+    const workDayModal = document.getElementById('workDayModal');
+    if (workDayModal) workDayModal.style.display = 'none';
 }
 function populateWorkerDropdown() {
     const select = document.getElementById('workDayWorker');
+    if (!select) return;
     select.innerHTML = '';
     workerList.forEach(name => {
         const opt = document.createElement('option');
@@ -887,41 +1006,57 @@ function updateWorkDayOfWeek() {
     if (dateStr) {
         const date = new Date(dateStr);
         const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        document.getElementById('workDayDay').value = days[date.getDay()];
+        const workDayDay = document.getElementById('workDayDay');
+        if (workDayDay) workDayDay.value = days[date.getDay()];
     } else {
-        document.getElementById('workDayDay').value = '';
+        const workDayDay = document.getElementById('workDayDay');
+        if (workDayDay) workDayDay.value = '';
     }
 }
 
 function openSaleModal(editIndex = null) {
-    document.getElementById('saleModal').style.display = 'flex';
-    document.getElementById('saleForm').reset();
-    document.getElementById('newSaleWorkerInput').style.display = 'none';
-    document.getElementById('saleEditIndex').value = editIndex !== null ? editIndex : '';
+    const saleModal = document.getElementById('saleModal');
+    const saleForm = document.getElementById('saleForm');
+    const newSaleWorkerInput = document.getElementById('newSaleWorkerInput');
+    const saleEditIndex = document.getElementById('saleEditIndex');
+    const saleDate = document.getElementById('saleDate');
+    const saleDay = document.getElementById('saleDay');
+    const saleVenue = document.getElementById('saleVenue');
+    const saleStatus = document.getElementById('saleStatus');
+    const saleForecast = document.getElementById('saleForecast');
+    const saleGross = document.getElementById('saleGross');
+    const saleNet = document.getElementById('saleNet');
+    const saleNotes = document.getElementById('saleNotes');
+    const saleWorkers = document.getElementById('saleWorkers');
+
+    if (saleModal) saleModal.style.display = 'flex';
+    if (saleForm) saleForm.reset();
+    if (newSaleWorkerInput) newSaleWorkerInput.style.display = 'none';
+    if (saleEditIndex) saleEditIndex.value = editIndex !== null ? editIndex : '';
     populateSaleWorkerDropdown();
-    document.getElementById('saleModalTitle').textContent = editIndex !== null ? 'Edit Sale' : 'Add Sale';
+    if (saleModal) saleModal.style.display = 'flex';
+    if (saleModalTitle) saleModalTitle.textContent = editIndex !== null ? 'Edit Sale' : 'Add Sale';
     if (editIndex !== null) {
         const sale = customSalesEntries[editIndex];
-        document.getElementById('saleDate').value = sale.Date;
-        document.getElementById('saleDay').value = sale.Day;
-        document.getElementById('saleVenue').value = sale.Venue;
-        document.getElementById('saleStatus').value = sale.Status;
-        document.getElementById('saleForecast').value = sale.Forecast;
-        document.getElementById('saleGross').value = sale['Gross Sales'];
-        document.getElementById('saleNet').value = sale['Net Sales'];
-        document.getElementById('saleNotes').value = sale.Notes;
+        if (saleDate) saleDate.value = sale.Date;
+        if (saleDay) saleDay.value = sale.Day;
+        if (saleVenue) populateVenueDropdown('saleVenue', sale.Venue);
+        if (saleStatus) saleStatus.value = sale.Status;
+        if (saleForecast) saleForecast.value = sale.Forecast;
+        if (saleGross) saleGross.value = sale['Gross Sales'];
+        if (saleNet) saleNet.value = sale['Net Sales'];
+        if (saleNotes) saleNotes.value = sale.Notes;
         // Set selected workers
-        const select = document.getElementById('saleWorkers');
-        Array.from(select.options).forEach(opt => {
-            opt.selected = sale.Workers && sale.Workers.includes(opt.value);
-        });
+        if (saleWorkers) populateSaleWorkerDropdown(sale.Workers);
     }
 }
 function closeSaleModal() {
-    document.getElementById('saleModal').style.display = 'none';
+    const saleModal = document.getElementById('saleModal');
+    if (saleModal) saleModal.style.display = 'none';
 }
 function populateSaleWorkerDropdown() {
     const select = document.getElementById('saleWorkers');
+    if (!select) return;
     select.innerHTML = '';
     workerList.forEach(name => {
         const opt = document.createElement('option');
@@ -939,9 +1074,11 @@ function updateSaleDayOfWeek() {
     if (dateStr) {
         const date = new Date(dateStr);
         const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        document.getElementById('saleDay').value = days[date.getDay()];
+        const saleDay = document.getElementById('saleDay');
+        if (saleDay) saleDay.value = days[date.getDay()];
     } else {
-        document.getElementById('saleDay').value = '';
+        const saleDay = document.getElementById('saleDay');
+        if (saleDay) saleDay.value = '';
     }
 }
 function deleteSale(index) {
@@ -1013,6 +1150,7 @@ async function apiDelete(sheet, keyColumns, keyValues) {
 
 async function populateVenueDropdown(selectId, currentVenue = null) {
   const select = document.getElementById(selectId);
+  if (!select) return;
   select.innerHTML = '';
   try {
     const venues = await apiGet('Venues');
@@ -1069,7 +1207,9 @@ async function reloadAllData() {
 
 // Double-click in calendar to add worker
 function setupCalendarDoubleClick() {
-  document.getElementById('calendarPlaceholder').addEventListener('dblclick', function(e) {
+  const calendarPlaceholder = document.getElementById('calendarPlaceholder');
+  if (!calendarPlaceholder) return;
+  calendarPlaceholder.addEventListener('dblclick', function(e) {
     // Find the cell
     let cell = e.target.closest('.calendar-cell');
     if (!cell) return;
@@ -1131,7 +1271,58 @@ function enableInlineEditing() {
   });
 }
 
+// Utility: Show error or empty state messages
+const showMessage = (msg, targetId = 'scheduleBody', colspan = 8) => {
+    const tbody = document.getElementById(targetId);
+    if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center; color:#e74c3c; font-weight:600;">${msg}</td></tr>`;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async function() {
+    // Accessibility: Add ARIA and tabindex to nav buttons
+    const dailySalesBtn = document.getElementById('dailySalesBtn');
+    const calendarBtn = document.getElementById('calendarBtn');
+    const dashboardBtn = document.getElementById('dashboardBtn');
+    const averageSaleBtn = document.getElementById('averageSaleBtn');
+
+    if (dailySalesBtn) {
+        dailySalesBtn.setAttribute('tabindex', '0');
+        dailySalesBtn.setAttribute('role', 'button');
+        dailySalesBtn.setAttribute('aria-pressed', dailySalesBtn.classList.contains('active') ? 'true' : 'false');
+        dailySalesBtn.setAttribute('aria-label', dailySalesBtn.textContent);
+        dailySalesBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') dailySalesBtn.click();
+        });
+    }
+    if (calendarBtn) {
+        calendarBtn.setAttribute('tabindex', '0');
+        calendarBtn.setAttribute('role', 'button');
+        calendarBtn.setAttribute('aria-pressed', calendarBtn.classList.contains('active') ? 'true' : 'false');
+        calendarBtn.setAttribute('aria-label', calendarBtn.textContent);
+        calendarBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') calendarBtn.click();
+        });
+    }
+    if (dashboardBtn) {
+        dashboardBtn.setAttribute('tabindex', '0');
+        dashboardBtn.setAttribute('role', 'button');
+        dashboardBtn.setAttribute('aria-pressed', dashboardBtn.classList.contains('active') ? 'true' : 'false');
+        dashboardBtn.setAttribute('aria-label', dashboardBtn.textContent);
+        dashboardBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') dashboardBtn.click();
+        });
+    }
+    if (averageSaleBtn) {
+        averageSaleBtn.setAttribute('tabindex', '0');
+        averageSaleBtn.setAttribute('role', 'button');
+        averageSaleBtn.setAttribute('aria-pressed', averageSaleBtn.classList.contains('active') ? 'true' : 'false');
+        averageSaleBtn.setAttribute('aria-label', averageSaleBtn.textContent);
+        averageSaleBtn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') averageSaleBtn.click();
+        });
+    }
+
     const showCalendarBtn = document.getElementById('showCalendarBtn');
     const calendarView = document.getElementById('calendarView');
     const tableView = document.getElementById('tableView');
@@ -1152,22 +1343,29 @@ document.addEventListener('DOMContentLoaded', async function() {
     hideSpinner();
 
     // Mode toggle event listener
-    document.getElementById('modeToggle').addEventListener('change', switchMode);
+    const modeToggle = document.getElementById('modeToggle');
+    if (modeToggle) modeToggle.addEventListener('change', switchMode);
     
     // Navigation event listeners
-    document.getElementById('dailySalesBtn').addEventListener('click', showDailySales);
-    document.getElementById('dashboardBtn').addEventListener('click', showDashboard);
-    document.getElementById('averageSaleBtn').addEventListener('click', showAverageSale);
-    document.getElementById('calendarBtn').addEventListener('click', showCalendarScreen);
+    const dailySalesBtnElement = document.getElementById('dailySalesBtn');
+    if (dailySalesBtnElement) dailySalesBtnElement.addEventListener('click', showDailySales);
+    const dashboardBtnElement = document.getElementById('dashboardBtn');
+    if (dashboardBtnElement) dashboardBtnElement.addEventListener('click', showDashboard);
+    const averageSaleBtnElement = document.getElementById('averageSaleBtn');
+    if (averageSaleBtnElement) averageSaleBtnElement.addEventListener('click', showAverageSale);
+    const calendarBtnElement = document.getElementById('calendarBtn');
+    if (calendarBtnElement) calendarBtnElement.addEventListener('click', showCalendarScreen);
 
-    document.getElementById('prevPageBtn').addEventListener('click', function() {
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    if (prevPageBtn) prevPageBtn.addEventListener('click', function() {
         if (currentPage > 1) {
             currentPage--;
             renderTablePage(currentPage);
         }
     });
     
-    document.getElementById('nextPageBtn').addEventListener('click', function() {
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    if (nextPageBtn) nextPageBtn.addEventListener('click', function() {
         const totalPages = Math.ceil(filteredScheduleData.length / ROWS_PER_PAGE) || 1;
         if (currentPage < totalPages) {
             currentPage++;
@@ -1175,52 +1373,65 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    document.querySelector('.close').addEventListener('click', closeModal);
-    window.addEventListener('click', function(event) {
-        const modal = document.getElementById('detailModal');
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            closeModal();
-        }
-    });
+    const detailModal = document.getElementById('detailModal');
+    if (detailModal) {
+        detailModal.querySelector('.close').addEventListener('click', closeModal);
+        window.addEventListener('click', function(event) {
+            if (event.target === detailModal) {
+                closeModal();
+            }
+        });
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    }
 
     populateCalendarPickers();
-    document.getElementById('printCalendarBtn').addEventListener('click', function() {
+    const printCalendarBtn = document.getElementById('printCalendarBtn');
+    if (printCalendarBtn) printCalendarBtn.addEventListener('click', function() {
         window.print();
     });
 
-    document.getElementById('addWorkDayBtn').addEventListener('click', function() {
+    const addWorkDayBtn = document.getElementById('addWorkDayBtn');
+    if (addWorkDayBtn) addWorkDayBtn.addEventListener('click', function() {
         openWorkDayModal();
     });
-    document.getElementById('closeWorkDayModal').addEventListener('click', closeWorkDayModal);
-    document.getElementById('workDayDate').addEventListener('change', updateWorkDayOfWeek);
-    document.getElementById('workDayWorker').addEventListener('change', function(e) {
+    const closeWorkDayModalBtn = document.getElementById('closeWorkDayModal');
+    if (closeWorkDayModalBtn) closeWorkDayModalBtn.addEventListener('click', closeWorkDayModal);
+    const workDayDate = document.getElementById('workDayDate');
+    if (workDayDate) workDayDate.addEventListener('change', updateWorkDayOfWeek);
+    const workDayWorker = document.getElementById('workDayWorker');
+    if (workDayWorker) workDayWorker.addEventListener('change', function(e) {
         const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
         if (selected.includes('__add_new__')) {
-            document.getElementById('newWorkerInput').style.display = '';
+            const newWorkerInput = document.getElementById('newWorkerInput');
+            if (newWorkerInput) newWorkerInput.style.display = '';
         } else {
-            document.getElementById('newWorkerInput').style.display = 'none';
+            const newWorkerInput = document.getElementById('newWorkerInput');
+            if (newWorkerInput) newWorkerInput.style.display = 'none';
         }
     });
-    document.getElementById('addWorkerBtn').addEventListener('click', function() {
+    const addWorkerBtn = document.getElementById('addWorkerBtn');
+    if (addWorkerBtn) addWorkerBtn.addEventListener('click', function() {
         const newName = document.getElementById('newWorkerInput').value.trim();
         if (newName && !workerList.includes(newName)) {
             workerList.push(newName);
             populateWorkerDropdown();
             // Select the new worker
             const select = document.getElementById('workDayWorker');
-            Array.from(select.options).forEach(opt => {
+            if (select) Array.from(select.options).forEach(opt => {
                 opt.selected = opt.value === newName;
             });
-            document.getElementById('newWorkerInput').value = '';
-            document.getElementById('newWorkerInput').style.display = 'none';
+            const newWorkerInput = document.getElementById('newWorkerInput');
+            if (newWorkerInput) newWorkerInput.value = '';
+            const newWorkerInputDiv = document.getElementById('newWorkerInput');
+            if (newWorkerInputDiv) newWorkerInputDiv.style.display = 'none';
         }
     });
-    document.getElementById('workDayForm').addEventListener('submit', function(e) {
+    const workDayForm = document.getElementById('workDayForm');
+    if (workDayForm) workDayForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const date = document.getElementById('workDayDate').value;
         let workers = Array.from(document.getElementById('workDayWorker').selectedOptions).map(opt => opt.value).filter(v => v !== '__add_new__');
@@ -1246,35 +1457,46 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    document.getElementById('addSaleBtn').addEventListener('click', function() {
+    const addSaleBtn = document.getElementById('addSaleBtn');
+    if (addSaleBtn) addSaleBtn.addEventListener('click', function() {
         openSaleModal();
     });
-    document.getElementById('closeSaleModal').addEventListener('click', closeSaleModal);
-    document.getElementById('exitSaleModalBtn').addEventListener('click', closeSaleModal);
-    document.getElementById('saleDate').addEventListener('change', updateSaleDayOfWeek);
-    document.getElementById('saleWorkers').addEventListener('change', function(e) {
+    const closeSaleModalBtn = document.getElementById('closeSaleModal');
+    if (closeSaleModalBtn) closeSaleModalBtn.addEventListener('click', closeSaleModal);
+    const exitSaleModalBtn = document.getElementById('exitSaleModalBtn');
+    if (exitSaleModalBtn) exitSaleModalBtn.addEventListener('click', closeSaleModal);
+    const saleDate = document.getElementById('saleDate');
+    if (saleDate) saleDate.addEventListener('change', updateSaleDayOfWeek);
+    const saleWorkers = document.getElementById('saleWorkers');
+    if (saleWorkers) saleWorkers.addEventListener('change', function(e) {
         const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
         if (selected.includes('__add_new__')) {
-            document.getElementById('newSaleWorkerInput').style.display = '';
+            const newSaleWorkerInput = document.getElementById('newSaleWorkerInput');
+            if (newSaleWorkerInput) newSaleWorkerInput.style.display = '';
         } else {
-            document.getElementById('newSaleWorkerInput').style.display = 'none';
+            const newSaleWorkerInput = document.getElementById('newSaleWorkerInput');
+            if (newSaleWorkerInput) newSaleWorkerInput.style.display = 'none';
         }
     });
-    document.getElementById('addSaleWorkerBtn').addEventListener('click', function() {
+    const addSaleWorkerBtn = document.getElementById('addSaleWorkerBtn');
+    if (addSaleWorkerBtn) addSaleWorkerBtn.addEventListener('click', function() {
         const newName = document.getElementById('newSaleWorkerInput').value.trim();
         if (newName && !workerList.includes(newName)) {
             workerList.push(newName);
             populateSaleWorkerDropdown();
             // Select the new worker
             const select = document.getElementById('saleWorkers');
-            Array.from(select.options).forEach(opt => {
+            if (select) Array.from(select.options).forEach(opt => {
                 opt.selected = opt.value === newName;
             });
-            document.getElementById('newSaleWorkerInput').value = '';
-            document.getElementById('newSaleWorkerInput').style.display = 'none';
+            const newSaleWorkerInput = document.getElementById('newSaleWorkerInput');
+            if (newSaleWorkerInput) newSaleWorkerInput.value = '';
+            const newSaleWorkerInputDiv = document.getElementById('newSaleWorkerInput');
+            if (newSaleWorkerInputDiv) newSaleWorkerInputDiv.style.display = 'none';
         }
     });
-    document.getElementById('saleForm').addEventListener('submit', function(e) {
+    const saleForm = document.getElementById('saleForm');
+    if (saleForm) saleForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const date = document.getElementById('saleDate').value;
         const day = document.getElementById('saleDay').value;
@@ -1315,6 +1537,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     setupCalendarDoubleClick();
     enableInlineEditing();
-    document.getElementById('closeUpdateSaleModal').onclick = closeUpdateSaleModal;
-    document.getElementById('exitUpdateSaleModalBtn').onclick = closeUpdateSaleModal;
+    const closeUpdateSaleModal = document.getElementById('closeUpdateSaleModal');
+    if (closeUpdateSaleModal) closeUpdateSaleModal.onclick = closeUpdateSaleModal;
+    const exitUpdateSaleModalBtn = document.getElementById('exitUpdateSaleModalBtn');
+    if (exitUpdateSaleModalBtn) exitUpdateSaleModalBtn.onclick = closeUpdateSaleModal;
 }); 
